@@ -253,22 +253,25 @@ def _build_receipt_story(doc, settings, receipt, customer_name, customer_phone,
                                        textColor=colors.white, fontSize=11, fontName='Times-Bold')
         header_style_right = ParagraphStyle('TableHeaderRight', parent=header_style, alignment=TA_RIGHT)
 
+        # Pre-compute font tag to avoid backslash-in-f-string (Python 3.11 compat)
+        rupee_tag = '<font name="' + UNICODE_FONT + '">\u20b9</font>'
+
         # Process the entire items_data to use Paragraphs for wrapping and font support
         formatted_items = []
         for i, row in enumerate(items_data):
             if i == 0: # Header
                 formatted_items.append([
-                    Paragraph(f'<b>{row[0]}</b>', header_style),
-                    Paragraph(f'<b>{row[1]}</b>', header_style_right),
-                    Paragraph(f'<b>{row[2].replace("₹", f"<font name=\'{UNICODE_FONT}\'>₹</font>")}</b>', header_style_right),
-                    Paragraph(f'<b>{row[3].replace("₹", f"<font name=\'{UNICODE_FONT}\'>₹</font>")}</b>', header_style_right),
+                    Paragraph('<b>' + row[0] + '</b>', header_style),
+                    Paragraph('<b>' + row[1] + '</b>', header_style_right),
+                    Paragraph('<b>' + row[2].replace('\u20b9', rupee_tag) + '</b>', header_style_right),
+                    Paragraph('<b>' + row[3].replace('\u20b9', rupee_tag) + '</b>', header_style_right),
                 ])
             else: # Data rows
                 formatted_items.append([
                     Paragraph(row[0], cell_style),
                     Paragraph(row[1], cell_style_right),
-                    Paragraph(row[2].replace('₹', f'<font name="{UNICODE_FONT}">₹</font>'), cell_style_right),
-                    Paragraph(row[3].replace('₹', f'<font name="{UNICODE_FONT}">₹</font>'), cell_style_right),
+                    Paragraph(row[2].replace('\u20b9', rupee_tag), cell_style_right),
+                    Paragraph(row[3].replace('\u20b9', rupee_tag), cell_style_right),
                 ])
 
         col_widths = [doc.width * 0.45, doc.width * 0.1, doc.width * 0.22, doc.width * 0.23]
@@ -291,13 +294,16 @@ def _build_receipt_story(doc, settings, receipt, customer_name, customer_phone,
     story.append(Spacer(1, 10))
 
     # ── Totals Layout ───────────────────────────
+    # Pre-compute font tag to avoid backslash-in-f-string (Python 3.11 compat)
+    rupee_tag = '<font name="' + UNICODE_FONT + '">₹</font>'
+    grand_total_font = UNICODE_FONT if UNICODE_FONT != 'Helvetica' else 'Times-Bold'
     summary_data = [
-        ['', 'Subtotal', Paragraph(f'₹{subtotal:,.2f}'.replace('₹', f'<font name="{UNICODE_FONT}">₹</font>'), cell_style_right)],
-        ['', 'GST (5%)', Paragraph(f'₹{gst_amount:,.2f}'.replace('₹', f'<font name="{UNICODE_FONT}">₹</font>'), cell_style_right)],
-        ['', Paragraph(f'<b>TOTAL AMOUNT</b>', ParagraphStyle('gt', textColor=CRIMSON, fontSize=14, fontName='Times-Bold')), 
-         Paragraph(f'<b>₹{grand_total:,.2f}</b>'.replace('₹', f'<font name="{UNICODE_FONT}">₹</font>'), 
-                   ParagraphStyle('gtv', textColor=CRIMSON, fontSize=14, fontName=UNICODE_FONT if UNICODE_FONT != "Helvetica" else "Times-Bold", alignment=TA_RIGHT))],
-        ['', 'Payment Method', Paragraph(f'<b>{payment_mode}</b>', cell_style_right)],
+        ['', 'Subtotal', Paragraph(('\u20b9' + '{:,.2f}'.format(subtotal)).replace('\u20b9', rupee_tag), cell_style_right)],
+        ['', 'GST (5%)', Paragraph(('\u20b9' + '{:,.2f}'.format(gst_amount)).replace('\u20b9', rupee_tag), cell_style_right)],
+        ['', Paragraph('<b>TOTAL AMOUNT</b>', ParagraphStyle('gt', textColor=CRIMSON, fontSize=14, fontName='Times-Bold')),
+         Paragraph(('<b>\u20b9' + '{:,.2f}</b>'.format(grand_total)).replace('\u20b9', rupee_tag),
+                   ParagraphStyle('gtv', textColor=CRIMSON, fontSize=14, fontName=grand_total_font, alignment=TA_RIGHT))],
+        ['', 'Payment Method', Paragraph('<b>' + payment_mode + '</b>', cell_style_right)],
     ]
     summary_table = Table(summary_data, colWidths=[doc.width * 0.5, doc.width * 0.25, doc.width * 0.25])
     summary_table.setStyle(TableStyle([
