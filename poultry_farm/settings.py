@@ -98,6 +98,9 @@ DATABASES = {
 DATABASE_URL = config('DATABASE_URL', default='')
 if DATABASE_URL:
     DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=60)
+    # Add connect_timeout so migrate fails fast instead of hanging (Railway fix)
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['connect_timeout'] = 10
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
