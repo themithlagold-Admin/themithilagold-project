@@ -22,8 +22,11 @@ whitenoise>=6.6.0
 # Production Server
 gunicorn>=21.2.0
 
+# Async workers (required by Procfile --worker-class gevent)
+gevent>=23.9.1
+
 # MIME type detection (Linux - used in Docker/HF Spaces)
-python-magic>=0.4.27
+# python-magic>=0.4.27  # Disabled: requires libmagic system lib (not on Railway)
 
 # Memory & process monitoring
 psutil>=5.9.8
