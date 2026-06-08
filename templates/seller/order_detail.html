@@ -1,0 +1,57 @@
+{% extends 'seller/base_seller.html' %}
+{% block title %}Order #{{ order.pk }} — Seller{% endblock %}
+{% block page_heading %}Order Details{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1>📦 Order #{{ order.pk }}</h1>
+    <p>Placed on {{ order.created_at|date:"d M Y, h:i A" }}</p>
+  </div>
+  <a href="{% url 'store:seller_orders' %}" class="adm-btn adm-btn-ghost">
+    <i class="bi bi-arrow-left"></i> Back to Orders
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="adm-card mb-4">
+      <div class="adm-card-header">
+        <span>Items from your store</span>
+      </div>
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td style="font-weight:600">{{ item.product_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.unit_price }}</td>
+            <td style="font-weight:600;color:var(--admin-accent)">₹{{ item.total }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="adm-card mb-4">
+      <div class="adm-card-header">
+        <span>Customer Info</span>
+      </div>
+      <div class="adm-card-body">
+        <p><strong>Name:</strong> {{ order.customer_name }}</p>
+        <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+        <p><strong>Address:</strong><br>{{ order.customer_address }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

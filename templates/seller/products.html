@@ -1,0 +1,77 @@
+{% extends 'seller/base_seller.html' %}
+{% block title %}My Products — Seller{% endblock %}
+{% block page_heading %}My Products{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1>📦 My Products</h1>
+    <p>Manage products you are selling on Mithila White Gold.</p>
+  </div>
+  <a href="{% url 'store:seller_product_add' %}" class="adm-btn adm-btn-primary">
+    <i class="bi bi-plus-lg"></i> Add Product
+  </a>
+</div>
+
+<div class="adm-card">
+  <div class="adm-card-header">
+    <span><i class="bi bi-box-seam"></i> &nbsp;Products</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--admin-border)">
+              <div style="font-weight:600">{{ product.name }}</div>
+            </div>
+          </td>
+          <td><span class="adm-badge blue">{{ product.category }}</span></td>
+          <td style="font-weight:700;color:#f59e0b">₹{{ product.price }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            {% if product.is_active %}
+              <span class="adm-badge green">Active</span>
+            {% else %}
+              <span class="adm-badge grey">Hidden</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:.4rem">
+              <a href="{% url 'store:seller_product_edit' product.pk %}" class="adm-btn adm-btn-ghost adm-btn-sm" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="{% url 'store:seller_product_delete' product.pk %}" style="margin:0" onsubmit="return confirm('Delete {{ product.name }}?')">
+                {% csrf_token %}
+                <button type="submit" class="adm-btn adm-btn-danger adm-btn-sm" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">
+          <div class="adm-empty">
+            <h5>No products found</h5>
+            <p>Add your first product to get started.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

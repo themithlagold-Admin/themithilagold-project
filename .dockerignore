@@ -1,0 +1,61 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment files (secrets — set these in HF Spaces Secrets)
+.env
+.env.*
+
+# Other platform configs (not needed for HF Spaces)
+.vercel
+vercel.json
+.render
+render.yaml
+render-build.sh
+fly.toml
+Procfile
+build_files.sh
+
+# Node
+node_modules/
+
+# Local dev scratch
+scratch/
+
+# Test files
+test_*.py
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NOTE: db_makhana.sqlite3 is intentionally NOT excluded.
+# Hugging Face Spaces runs on ephemeral storage, so we ship the SQLite DB
+# with all seed data baked in. For persistent data, configure DATABASE_URL
+# in HF Spaces Secrets to point to a PostgreSQL instance (e.g. Neon.tech).
+
+# NOTE: staticfiles/ is excluded — entrypoint.sh runs collectstatic at boot.
+staticfiles/
+
+# Uploaded user media (large binary files — serve from DB via DynamicMedia instead)
+media/

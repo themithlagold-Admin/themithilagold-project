@@ -1,0 +1,76 @@
+{% extends 'admin_custom/base_admin.html' %}
+
+{% block page_heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1>👥 Approved Sellers</h1>
+    <p>Manage all sellers on your platform.</p>
+  </div>
+</div>
+
+<div class="adm-card">
+  <div class="adm-card-header">
+    <span><i class="bi bi-people-fill"></i> &nbsp;Sellers List</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Business Name</th>
+          <th>Owner</th>
+          <th>Phone / Email</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for seller in sellers %}
+        <tr>
+          <td>
+            <div style="font-weight:600">{{ seller.business_name }}</div>
+            <div style="font-size:0.75rem;color:var(--admin-muted)">Joined: {{ seller.created_at|date:"d M Y" }}</div>
+          </td>
+          <td>{{ seller.user.first_name|default:"--" }}</td>
+          <td>
+            {{ seller.phone }}<br>
+            <span style="font-size:0.75rem;color:var(--admin-muted)">{{ seller.user.email|default:"--" }}</span>
+          </td>
+          <td>
+            {% if seller.user.is_active %}
+              <span class="adm-badge green">Active</span>
+            {% else %}
+              <span class="adm-badge red">Blacklisted</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-flex gap-2">
+              <a href="{% url 'store:admin_seller_dashboard_view' seller.pk %}" class="adm-btn adm-btn-primary adm-btn-sm" title="View Dashboard">
+                <i class="bi bi-speedometer2"></i>
+              </a>
+              <a href="{% url 'store:admin_seller_edit' seller.pk %}" class="adm-btn adm-btn-ghost adm-btn-sm" title="Edit Seller">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form action="{% url 'store:admin_seller_remove' seller.pk %}" method="post" class="m-0" onsubmit="return confirm('Are you sure you want to permanently delete this seller? This will delete their account and all products.')">
+                {% csrf_token %}
+                <button type="submit" class="adm-btn adm-btn-danger adm-btn-sm" title="Remove Seller">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">
+          <div class="adm-empty">
+            <h5>No sellers found</h5>
+            <p>Approve pending requests to add sellers.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

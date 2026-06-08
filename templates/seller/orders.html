@@ -1,0 +1,56 @@
+{% extends 'seller/base_seller.html' %}
+{% block title %}My Orders — Seller{% endblock %}
+{% block page_heading %}Orders{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1>🛒 My Orders</h1>
+    <p>View orders containing your products.</p>
+  </div>
+</div>
+
+<div class="adm-card">
+  <div class="adm-card-header">
+    <span><i class="bi bi-cart"></i> &nbsp;Orders</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><span style="font-weight:600">#{{ order.pk }}</span></td>
+          <td style="color:var(--admin-muted)">{{ order.created_at|date:"d M Y, h:i A" }}</td>
+          <td>{{ order.customer_name }}</td>
+          <td>
+            <span class="adm-badge {% if order.status == 'delivered' %}green{% elif order.status == 'cancelled' %}red{% else %}amber{% endif %}">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'store:seller_order_detail' order.pk %}" class="adm-btn adm-btn-primary adm-btn-sm">
+              View Items
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">
+          <div class="adm-empty">
+            <h5>No orders found</h5>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

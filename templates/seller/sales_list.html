@@ -1,0 +1,57 @@
+{% extends 'seller/base_seller.html' %}
+{% block title %}Walk-in Sales{% endblock %}
+
+{% block seller_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="h4 mb-0 fw-bold" style="color:var(--admin-dark)">My Walk-in Sales</h2>
+  <a href="{% url 'store:seller_sales_add' %}" class="adm-btn adm-btn-primary">
+    <i class="bi bi-plus-lg"></i> Record Sale
+  </a>
+</div>
+
+<div class="adm-card">
+  <div class="adm-card-header">
+    <span>Recent Sales</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Payment Mode</th>
+          <th>Receipt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sale in sales %}
+        <tr>
+          <td>{{ sale.date|date:"d M Y" }}</td>
+          <td>{{ sale.customer_name }}<br><small class="text-muted">{{ sale.customer_phone }}</small></td>
+          <td>
+            {% for item in sale.items.all %}
+              {{ item.product_name }} (x{{ item.quantity }})<br>
+            {% endfor %}
+          </td>
+          <td class="fw-bold">₹{{ sale.total_amount }}</td>
+          <td>{{ sale.payment_mode }}</td>
+          <td>
+            <a href="{% url 'store:sales_receipt_pdf' sale.pk %}" class="adm-btn adm-btn-ghost adm-btn-sm" target="_blank" title="Download PDF">
+              <i class="bi bi-file-pdf text-danger"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">
+          <div class="adm-empty">
+            <h5>No sales recorded yet.</h5>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

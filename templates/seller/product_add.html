@@ -1,0 +1,77 @@
+{% extends 'seller/base_seller.html' %}
+{% block title %}Add Product — Seller{% endblock %}
+{% block page_heading %}Add Product{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1>➕ Add New Product</h1>
+    <p>List a new item in your catalog.</p>
+  </div>
+  <a href="{% url 'store:seller_products' %}" class="adm-btn adm-btn-ghost">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
+
+<div class="adm-card">
+  <div class="adm-card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-md-8">
+          <div class="adm-form-group">
+            <label>Product Name</label>
+            <input type="text" name="name" class="adm-input" required>
+          </div>
+          <div class="adm-form-group">
+            <label>Description</label>
+            <textarea name="description" class="adm-textarea" required></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 adm-form-group">
+              <label>Price (₹)</label>
+              <input type="number" step="0.01" name="price" class="adm-input" required>
+            </div>
+            <div class="col-md-6 adm-form-group">
+              <label>Stock Quantity</label>
+              <input type="number" name="stock" class="adm-input" value="10">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="adm-form-group">
+            <label>Category</label>
+            <select name="category" class="adm-select" required>
+              <option value="">-- Select Category --</option>
+              {% for cat in categories %}
+                <option value="{{ cat.pk }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="adm-form-group">
+            <label>Main Image</label>
+            <input type="file" name="image" class="adm-input" accept="image/*">
+          </div>
+          <div class="adm-form-group">
+            <label>Gallery Images (Select Multiple)</label>
+            <input type="file" name="gallery_images" class="adm-input" accept="image/*" multiple>
+          </div>
+          <div class="adm-form-group">
+            <label>Product Video (Optional)</label>
+            <input type="file" name="video_file" class="adm-input" accept="video/*">
+          </div>
+          <div class="adm-form-group mt-4">
+            <label class="adm-checkbox-label">
+              <input type="checkbox" name="is_active" checked>
+              Active (Visible on site)
+            </label>
+          </div>
+          <button type="submit" class="adm-btn adm-btn-primary w-100 mt-3">
+            <i class="bi bi-check-lg"></i> Save Product
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

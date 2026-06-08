@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Send Inquiry — Mithila White Gold{% endblock %}
+{% block meta_description %}Send your inquiry, bulk order request, suggestion or complaint to Mithila White Gold. We respond within 24 hours.{% endblock %}
+
+{% block content %}
+
+<!-- ══════════ INQUIRY HERO ══════════ -->
+<section class="inquiry-hero">
+  <div class="container py-5 text-center text-white">
+    <div class="hero-badge badge-farm mb-3 d-inline-block">
+      <i class="bi bi-send-fill me-1"></i> Get in Touch
+    </div>
+    <h1 class="hero-title mb-3">Send Us an <span class="gold-shimmer">Inquiry</span></h1>
+    <p style="color:rgba(253,246,227,0.82);font-size:1.05rem;max-width:520px;margin:0 auto;">
+      Bulk orders, business partnerships, suggestions or feedback — we read every message and respond within 24 hours.
+    </p>
+  </div>
+</section>
+
+<!-- ══════════ FORM SECTION ══════════ -->
+<section class="py-5" style="background:var(--ivory);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7">
+
+        {% if submitted %}
+        <!-- Success State -->
+        <div class="inq-success-card text-center">
+          <div class="inq-success-icon">✅</div>
+          <h2 class="inq-success-title">Inquiry Sent!</h2>
+          <p class="inq-success-msg">
+            Thank you for reaching out. We've received your message and will get back to you within <strong>24 hours</strong>.
+          </p>
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{% url 'store:home' %}" class="btn btn-farm-primary px-5">
+              <i class="bi bi-house-fill me-2"></i>Back to Home
+            </a>
+            <a href="{% url 'store:inquiry' %}" class="btn btn-outline-warning px-5">
+              <i class="bi bi-plus-circle me-2"></i>New Inquiry
+            </a>
+          </div>
+        </div>
+        {% else %}
+        <!-- Inquiry Type Quick-pick pills -->
+        <div class="inq-type-pills mb-4">
+          <a href="{% url 'store:inquiry' %}?type=bulk_order"
+             class="inq-pill {% if preselect_type == 'bulk_order' %}active{% endif %}">
+            <i class="bi bi-box-seam-fill"></i> Bulk Order
+          </a>
+          <a href="{% url 'store:inquiry' %}?type=suggestion"
+             class="inq-pill {% if preselect_type == 'suggestion' %}active{% endif %}">
+            <i class="bi bi-lightbulb-fill"></i> Suggestion
+          </a>
+          <a href="{% url 'store:inquiry' %}?type=business"
+             class="inq-pill {% if preselect_type == 'business' %}active{% endif %}">
+            <i class="bi bi-handshake-fill"></i> Business
+          </a>
+          <a href="{% url 'store:inquiry' %}?type=complaint"
+             class="inq-pill {% if preselect_type == 'complaint' %}active{% endif %}">
+            <i class="bi bi-chat-square-text-fill"></i> Complaint
+          </a>
+        </div>
+
+        <!-- Form Card -->
+        <div class="inq-form-card">
+          <div class="inq-form-header">
+            <i class="bi bi-envelope-open-fill me-2"></i>
+            <span>Fill in the details below</span>
+          </div>
+
+          <form method="POST" action="{% url 'store:inquiry' %}" class="p-4 p-md-5">
+            {% csrf_token %}
+
+            <!-- Name + Phone -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="inq-label" for="inq_name">
+                  <i class="bi bi-person-fill me-1"></i> Full Name <span class="text-danger">*</span>
+                </label>
+                <input type="text" id="inq_name" name="name" class="inq-input"
+                       placeholder="e.g. Satyam Kumar Jha"
+                       value="{{ request.POST.name }}" required>
+              </div>
+              <div class="col-md-6">
+                <label class="inq-label" for="inq_phone">
+                  <i class="bi bi-telephone-fill me-1"></i> Phone Number <span class="text-danger">*</span>
+                </label>
+                <input type="tel" id="inq_phone" name="phone" class="inq-input"
+                       placeholder="e.g. 6202822415"
+                       value="{{ request.POST.phone }}" required>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label class="inq-label" for="inq_email">
+                <i class="bi bi-envelope-fill me-1"></i> Email Address <span class="text-danger">*</span>
+              </label>
+              <input type="email" id="inq_email" name="email" class="inq-input"
+                     placeholder="e.g. yourname@gmail.com"
+                     value="{{ request.POST.email }}" required>
+            </div>
+
+            <!-- Inquiry Type -->
+            <div class="mb-3">
+              <label class="inq-label" for="inq_type">
+                <i class="bi bi-tag-fill me-1"></i> Inquiry Type <span class="text-danger">*</span>
+              </label>
+              <select id="inq_type" name="inquiry_type" class="inq-input inq-select" required>
+                {% for value, label in inquiry_types %}
+                <option value="{{ value }}"
+                  {% if preselect_type == value or request.POST.inquiry_type == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-4">
+              <label class="inq-label" for="inq_message">
+                <i class="bi bi-chat-left-text-fill me-1"></i> Your Message <span class="text-danger">*</span>
+              </label>
+              <textarea id="inq_message" name="message" class="inq-input inq-textarea"
+                        placeholder="Describe your inquiry in detail — quantity needed, product type, timeline, etc."
+                        rows="5" required>{{ request.POST.message }}</textarea>
+              <small class="text-muted mt-1 d-block">
+                <i class="bi bi-info-circle me-1"></i>For bulk orders, please mention the quantity and preferred product.
+              </small>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-farm-primary btn-lg w-100 py-3 fw-bold inq-submit-btn">
+              <i class="bi bi-send-fill me-2"></i>Send My Inquiry
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- Side Info Panel -->
+      <div class="col-lg-4 col-xl-3 mt-4 mt-lg-0">
+        <div class="inq-info-panel">
+          <h6 class="inq-info-title"><i class="bi bi-lightning-fill me-2 text-warning"></i>Quick Info</h6>
+          <div class="inq-info-item">
+            <i class="bi bi-clock-fill"></i>
+            <div>
+              <strong>Response Time</strong>
+              <span>Within 24 hours</span>
+            </div>
+          </div>
+          <div class="inq-info-item">
+            <i class="bi bi-telephone-fill"></i>
+            <div>
+              <strong>Direct Call</strong>
+              <a href="tel:6202822415">6202822415</a>
+            </div>
+          </div>
+          <div class="inq-info-item">
+            <i class="bi bi-geo-alt-fill"></i>
+            <div>
+              <strong>Location</strong>
+              <span>Darbhanga, Mithila, Bihar</span>
+            </div>
+          </div>
+          <div class="inq-info-item">
+            <i class="bi bi-box-seam-fill"></i>
+            <div>
+              <strong>Bulk Orders</strong>
+              <span>Min. 5 kg — special pricing</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inquiry type legend -->
+        <div class="inq-legend mt-3">
+          <h6 class="inq-info-title mb-3"><i class="bi bi-question-circle me-2 text-warning"></i>Inquiry Types</h6>
+          <div class="inq-legend-item"><span class="inq-dot inq-dot-bulk"></span> <strong>Bulk Order</strong> — Wholesale / large quantity</div>
+          <div class="inq-legend-item"><span class="inq-dot inq-dot-suggest"></span> <strong>Suggestion</strong> — New flavours, packaging</div>
+          <div class="inq-legend-item"><span class="inq-dot inq-dot-biz"></span> <strong>Business</strong> — Partnerships, reselling</div>
+          <div class="inq-legend-item"><span class="inq-dot inq-dot-complaint"></span> <strong>Complaint</strong> — Quality, delivery issues</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

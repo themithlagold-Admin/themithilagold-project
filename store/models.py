@@ -1,0 +1,554 @@
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.urls import reverse
+from django.core.files.base import ContentFile
+import uuid
+import mimetypes
+import os
+
+
+class Seller(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
+    business_name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=15)
+    address = models.TextField()
+    is_approved = models.BooleanField(default=False)
+    is_blacklisted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.business_name} ({self.user.username})"
+
+
+class SellerRequest(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    full_name = models.CharField(max_length=200)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15)
+    business_name = models.CharField(max_length=200)
+    address = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.business_name} - {self.status}"
+
+
+class DynamicMedia(models.Model):
+    """Stores files as byte arrays in the database."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    file_content = models.BinaryField()
+    file_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100)
+    file_size = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Dynamic Media'
+
+    def __str__(self):
+        return self.file_name
+
+    def get_absolute_url(self):
+        return reverse('store:serve_db_media', kwargs={'file_id': self.id})
+
+
+def upload_to_db(file_field):
+    """Helper to convert a file field upload to a DynamicMedia record with memory safety."""
+    if not file_field:
+        return None
+    
+    # ── Memory Safety Check ───────────────────
+    # Limit uploads to 20MB to prevent OOM on 512MB RAM instances
+    MAX_SIZE = 20 * 1024 * 1024 # 20MB
+    if file_field.size > MAX_SIZE:
+        print(f"File too large: {file_field.size} bytes. Limit is {MAX_SIZE}")
+        return None
+
+    try:
+        # Check if file exists on storage if it's a FieldFile
+        if hasattr(file_field, 'name') and not hasattr(file_field, 'file'):
+            try:
+                if not file_field.storage.exists(file_field.name):
+                    return None
+            except:
+                return None
+
+        # Read content (still reads into memory, but capped at 20MB)
+        file_field.seek(0)
+        content = file_field.read()
+        name = os.path.basename(file_field.name)
+        content_type, _ = mimetypes.guess_type(name)
+        if not content_type:
+            content_type = 'application/octet-stream'
+            
+        media = DynamicMedia.objects.create(
+            file_content=content,
+            file_name=name,
+            content_type=content_type,
+            file_size=len(content)
+        )
+        return media
+    except (FileNotFoundError, ValueError, Exception) as e:
+        print(f"Skipping upload to DB: {e}")
+        return None
+
+
+class SiteSettings(models.Model):
+    """Singleton model for company/site-wide settings configurable by admin."""
+    company_name = models.CharField(max_length=200, default='Mithila White Gold')
+    address = models.TextField(default='Darbhanga, Mithila, Bihar')
+    landmark = models.CharField(max_length=200, default='')
+    phone_primary = models.CharField(max_length=20, default='6202822415', verbose_name='Phone (Satyan Jha)')
+    phone_secondary = models.CharField(max_length=20, default='', blank=True, null=True)
+    email = models.EmailField(blank=True, default='')
+    gst_number = models.CharField(max_length=50, default='10AAQFJ2396C1ZJ')
+    tagline = models.CharField(max_length=300, default='मिथिला की धरोहर — हर कौर में।')
+    maps_embed_url = models.URLField(
+        blank=True,
+        default='https://maps.google.com/maps?q=Belhwar+Durga+Mandir+Madhubani+Bihar&output=embed'
+    )
+    promo_video = models.FileField(upload_to='site/videos/', blank=True, null=True, help_text="Advertisement video for homepage")
+    promo_video_db = models.ForeignKey(DynamicMedia, on_delete=models.SET_NULL, null=True, blank=True, related_name='site_promo_video')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site Settings'
+        verbose_name_plural = 'Site Settings'
+
+    def __str__(self):
+        return 'Site Settings'
+
+    def save(self, *args, **kwargs):
+        # Handle promo_video upload to DB
+        if self.promo_video and not self.promo_video_db:
+            # Only upload if it's a new file (not just a path string)
+            if hasattr(self.promo_video, 'file'):
+                media = upload_to_db(self.promo_video)
+                if media:
+                    self.promo_video_db = media
+
+        # Enforce singleton
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @property
+    def promo_video_url(self):
+        if self.promo_video_db:
+            return self.promo_video_db.get_absolute_url()
+        if self.promo_video:
+            return self.promo_video.url
+        return None
+
+    @classmethod
+    def get_settings(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+    description = models.CharField(max_length=200, blank=True)
+    icon = models.CharField(max_length=100, default='📌')  # emoji icon for display
+
+    class Meta:
+        verbose_name_plural = 'Categories'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE, null=True, blank=True, related_name='products')
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image_db = models.ForeignKey(DynamicMedia, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_main_image')
+    video_file = models.FileField(upload_to='products/videos/', blank=True, null=True, help_text="Upload a video file")
+    video_db = models.ForeignKey(DynamicMedia, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_video_file')
+    video_url = models.URLField(blank=True, null=True, help_text="Or provide a YouTube/Vimeo video URL")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def in_stock(self):
+        return self.stock > 0
+
+    @property
+    def image_url(self):
+        if self.image_db:
+            return self.image_db.get_absolute_url()
+        if self.image:
+            return self.image.url
+        # Fallback to first gallery image if main image is missing
+        gallery_image = self.images.first()
+        if gallery_image:
+            return gallery_image.image_url
+        return '/static/img/product_placeholder.svg'
+
+    @property
+    def video_file_url(self):
+        if self.video_db:
+            return self.video_db.get_absolute_url()
+        if self.video_file:
+            return self.video_file.url
+        return None
+
+    def save(self, *args, **kwargs):
+        # Handle image upload to DB
+        if self.image and hasattr(self.image, 'file'):
+            media = upload_to_db(self.image)
+            if media:
+                self.image_db = media
+        
+        # Handle video upload to DB
+        if self.video_file and hasattr(self.video_file, 'file'):
+            media = upload_to_db(self.video_file)
+            if media:
+                self.video_db = media
+
+        super().save(*args, **kwargs)
+
+    def get_all_images(self):
+        return self.images.all()
+
+
+class ProductImage(models.Model):
+    """Additional images for a product gallery."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='products/gallery/')
+    image_db = models.ForeignKey(DynamicMedia, on_delete=models.SET_NULL, null=True, blank=True, related_name='gallery_image')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Handle image upload to DB
+        if self.image and hasattr(self.image, 'file'):
+            media = upload_to_db(self.image)
+            if media:
+                self.image_db = media
+        super().save(*args, **kwargs)
+
+    @property
+    def image_url(self):
+        if self.image_db:
+            return self.image_db.get_absolute_url()
+        if self.image:
+            return self.image.url
+        return '/static/img/product_placeholder.svg'
+
+    def __str__(self):
+        return f"Gallery image for {self.product.name}"
+
+
+class Farmer(models.Model):
+    """Extended profile for registered farmers."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='farmer_profile')
+    phone = models.CharField(max_length=15, unique=True)
+    address = models.TextField()
+    profile_pic = models.ImageField(upload_to='farmers/', blank=True, null=True)
+    profile_pic_db = models.ForeignKey(DynamicMedia, on_delete=models.SET_NULL, null=True, blank=True, related_name='farmer_profile_pic')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username} — {self.phone}"
+
+    def save(self, *args, **kwargs):
+        if self.profile_pic and hasattr(self.profile_pic, 'file'):
+            media = upload_to_db(self.profile_pic)
+            if media:
+                self.profile_pic_db = media
+        super().save(*args, **kwargs)
+
+    @property
+    def profile_pic_url(self):
+        if self.profile_pic_db:
+            return self.profile_pic_db.get_absolute_url()
+        if self.profile_pic:
+            return self.profile_pic.url
+        return None
+
+    @property
+    def loyalty_tier(self):
+        order_count = self.user.orders.exclude(status='cancelled').count() if self.user else 0
+        if order_count >= 10:
+            return {
+                'name': 'Gold',
+                'color': '#FFD700',
+                'text_color': '#000000',
+                'icon': '🏆',
+                'count': order_count
+            }
+        elif order_count >= 3:
+            return {
+                'name': 'Silver',
+                'color': '#C0C0C0',
+                'text_color': '#000000',
+                'icon': '🥈',
+                'count': order_count
+            }
+        else:
+            return {
+                'name': 'Bronze',
+                'color': '#CD7F32',
+                'text_color': '#ffffff',
+                'icon': '🥉',
+                'count': order_count
+            }
+
+
+class Order(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_PROCESSING = 'processing'
+    STATUS_SHIPPED = 'shipped'
+    STATUS_DELIVERED = 'delivered'
+    STATUS_CANCELLED = 'cancelled'
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_PROCESSING, 'Processing'),
+        (STATUS_SHIPPED, 'Shipped'),
+        (STATUS_DELIVERED, 'Delivered'),
+        (STATUS_CANCELLED, 'Cancelled'),
+    ]
+
+    STATUS_COLORS = {
+        STATUS_PENDING: 'warning',
+        STATUS_PROCESSING: 'info',
+        STATUS_SHIPPED: 'primary',
+        STATUS_DELIVERED: 'success',
+        STATUS_CANCELLED: 'danger',
+    }
+
+    farmer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='orders')
+    customer_name = models.CharField(max_length=200)
+    customer_phone = models.CharField(max_length=15)
+    customer_address = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    gst_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_mode = models.CharField(max_length=50, default='Cash')
+    notes = models.TextField(blank=True)
+    cancellation_reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Order #{self.pk} — {self.customer_name}"
+
+    @property
+    def subtotal(self):
+        return self.total_amount - self.gst_amount
+
+    def get_status_color(self):
+        return self.STATUS_COLORS.get(self.status, 'secondary')
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    seller = models.ForeignKey(Seller, on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
+    product_name = models.CharField(max_length=200)  # stored at time of order
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.product_name} x{self.quantity}"
+
+    @property
+    def total(self):
+        return self.quantity * self.unit_price
+
+
+class SalesRecord(models.Model):
+    """Manual sales record for walk-in / offline sales."""
+    PAYMENT_CASH = 'Cash'
+    PAYMENT_UPI = 'UPI'
+    PAYMENT_BANK = 'Bank Transfer'
+
+    PAYMENT_CHOICES = [
+        (PAYMENT_CASH, 'Cash'),
+        (PAYMENT_UPI, 'UPI'),
+        (PAYMENT_BANK, 'Bank Transfer'),
+    ]
+
+    customer_name = models.CharField(max_length=200)
+    customer_phone = models.CharField(max_length=15)
+    customer_address = models.TextField(blank=True)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    gst_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_mode = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default=PAYMENT_CASH)
+    date = models.DateField(default=timezone.now)
+    notes = models.TextField(blank=True)
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    seller = models.ForeignKey(Seller, on_delete=models.SET_NULL, null=True, blank=True, related_name='sales_records')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"Sale #{self.pk} — {self.customer_name} — ₹{self.total_amount}"
+
+    @property
+    def subtotal(self):
+        return self.total_amount - self.gst_amount
+
+
+class SalesItem(models.Model):
+    """Line items within a SalesRecord."""
+    sales_record = models.ForeignKey(SalesRecord, on_delete=models.CASCADE, related_name='items')
+    product_name = models.CharField(max_length=200)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.product_name} x{self.quantity}"
+
+    @property
+    def total(self):
+        return self.quantity * self.unit_price
+
+
+class PaymentReceipt(models.Model):
+    """Generated PDF receipt — linked to either an Order or SalesRecord."""
+    receipt_number = models.CharField(max_length=20, unique=True, blank=True)
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True, blank=True, related_name='receipt')
+    sales_record = models.OneToOneField(SalesRecord, on_delete=models.CASCADE, null=True, blank=True, related_name='receipt')
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-generated_at']
+
+    def __str__(self):
+        return f"Receipt #{self.receipt_number}"
+
+    def save(self, *args, **kwargs):
+        if not self.receipt_number:
+            # Auto-generate receipt number
+            last = PaymentReceipt.objects.order_by('-pk').first()
+            next_num = (last.pk + 1) if last else 1
+            self.receipt_number = f'RCP{next_num:05d}'
+        super().save(*args, **kwargs)
+
+class ProductReview(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveIntegerField(default=5)
+    message = models.TextField(blank=True)
+    image = models.ImageField(upload_to='reviews/', blank=True, null=True)
+    image_db = models.ForeignKey(DynamicMedia, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review by {self.user.username} for {self.product.name}"
+
+    @property
+    def image_url(self):
+        if self.image_db:
+            return self.image_db.get_absolute_url()
+        if self.image:
+            return self.image.url
+        return None
+
+    def save(self, *args, **kwargs):
+        if self.image and hasattr(self.image, 'file'):
+            media = upload_to_db(self.image)
+            if media:
+                self.image_db = media
+        super().save(*args, **kwargs)
+
+class ChatSession(models.Model):
+    """Tracks a chat session with the bot."""
+    session_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"Chat Session {self.session_id}"
+
+class ChatMessage(models.Model):
+    """Stores individual messages within a chat session."""
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('bot', 'Bot'),
+    ]
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+        
+    def __str__(self):
+        return f"{self.role}: {self.text[:30]}"
+
+
+class Inquiry(models.Model):
+    """Customer inquiry submitted via the homepage ticker / inquiry form."""
+    TYPE_SUGGESTION   = 'suggestion'
+    TYPE_BULK         = 'bulk_order'
+    TYPE_BUSINESS     = 'business'
+    TYPE_COMPLAINT    = 'complaint'
+
+    TYPE_CHOICES = [
+        (TYPE_SUGGESTION, '💡 Suggestion'),
+        (TYPE_BULK,       '📦 Bulk Order'),
+        (TYPE_BUSINESS,   '🤝 Business Inquiry'),
+        (TYPE_COMPLAINT,  '⚠️ Complaint'),
+    ]
+
+    name         = models.CharField(max_length=150)
+    phone        = models.CharField(max_length=15)
+    email        = models.EmailField()
+    inquiry_type = models.CharField(max_length=30, choices=TYPE_CHOICES, default=TYPE_SUGGESTION)
+    message      = models.TextField()
+    is_read      = models.BooleanField(default=False)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Inquiries'
+
+    def __str__(self):
+        return f"[{self.get_inquiry_type_display()}] {self.name} — {self.created_at.strftime('%d %b %Y')}"
+
+    def get_type_color(self):
+        colors = {
+            self.TYPE_SUGGESTION: 'blue',
+            self.TYPE_BULK:       'green',
+            self.TYPE_BUSINESS:   'purple',
+            self.TYPE_COMPLAINT:  'red',
+        }
+        return colors.get(self.inquiry_type, 'grey')

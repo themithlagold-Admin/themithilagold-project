@@ -1,0 +1,301 @@
+{% extends 'admin_custom/base_admin.html' %}
+{% load static %}
+
+{% block title %}Registered Users — Admin{% endblock %}
+{% block page_heading %}Registered Users{% endblock %}
+
+{% block extra_css %}
+<style>
+  .user-avatar-ring {
+    width: 52px; height: 52px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0;
+    border: 2.5px solid var(--admin-border);
+    background: linear-gradient(135deg, #f3e9c6, #e8d48a);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; font-weight: 700; color: var(--admin-accent);
+    box-shadow: 0 2px 8px rgba(201,150,42,.12);
+  }
+  .user-avatar-ring img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .tier-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 30px; font-size: .72rem; font-weight: 700;
+    white-space: nowrap;
+  }
+  .tier-bronze  { background: #fdf0e8; color: #9a4b1a; border: 1px solid #f5cba7; }
+  .tier-silver  { background: #f4f6f7; color: #5d6d7e; border: 1px solid #bdc3c7; }
+  .tier-gold    { background: #fefde7; color: #9a7d0a; border: 1px solid #f9e79f; }
+
+  .tier-emoji { font-size: .9rem; }
+
+  .user-name { font-weight: 600; font-size: .9rem; color: var(--admin-text); }
+  .user-meta { font-size: .77rem; color: var(--admin-muted); }
+
+  .search-bar-wrap {
+    display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  }
+  .search-input-group {
+    position: relative; flex: 1; min-width: 220px;
+  }
+  .search-input-group i {
+    position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+    color: var(--admin-muted); font-size: .95rem;
+  }
+  .search-input-group input {
+    padding-left: 2.25rem;
+  }
+
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: .3rem .8rem; border-radius: 20px; font-size: .78rem; font-weight: 500;
+    border: 1px solid var(--admin-border); background: #fff;
+    color: var(--admin-muted); text-decoration: none; transition: all .15s;
+    cursor: pointer;
+  }
+  .filter-chip:hover, .filter-chip.active { border-color: var(--admin-accent); background: var(--admin-accent-soft); color: var(--admin-accent); }
+  .filter-chip.active { font-weight: 700; }
+
+  .stat-pill {
+    background: var(--admin-accent-soft); color: var(--admin-accent);
+    padding: 2px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700;
+  }
+  .orders-count-mini {
+    background: #f3f4f6; color: #374151;
+    padding: 2px 8px; border-radius: 8px; font-size: .78rem; font-weight: 600;
+  }
+  .joined-date { font-size: .77rem; color: var(--admin-muted); }
+
+  .no-farmer-row td { text-align: center; padding: 3rem 1rem; color: var(--admin-muted); font-size: .9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1><i class="bi bi-people me-2" style="color:var(--admin-accent)"></i>Registered Users</h1>
+    <p>All customer accounts with their profiles and loyalty tiers</p>
+  </div>
+  <div>
+    <span class="stat-pill">
+      <i class="bi bi-person-check"></i> {{ total_count }} user{{ total_count|pluralize }}
+    </span>
+  </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="adm-card mb-4">
+  <div class="adm-card-body">
+    <form method="get" action="">
+      <div class="search-bar-wrap">
+        <div class="search-input-group">
+          <i class="bi bi-search"></i>
+          <input
+            class="adm-input"
+            type="text"
+            name="q"
+            placeholder="Search by name, email, username, or phone..."
+            value="{{ search_query }}"
+            id="users-search-input"
+          >
+        </div>
+
+        <!-- Tier filter chips -->
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <a href="?q={{ search_query }}" class="filter-chip {% if not tier_filter %}active{% endif %}">
+            All
+          </a>
+          <a href="?q={{ search_query }}&tier=Bronze" class="filter-chip {% if tier_filter == 'Bronze' %}active{% endif %}">
+            🥉 Bronze
+          </a>
+          <a href="?q={{ search_query }}&tier=Silver" class="filter-chip {% if tier_filter == 'Silver' %}active{% endif %}">
+            🥈 Silver
+          </a>
+          <a href="?q={{ search_query }}&tier=Gold" class="filter-chip {% if tier_filter == 'Gold' %}active{% endif %}">
+            🥇 Gold
+          </a>
+        </div>
+
+        <button type="submit" class="adm-btn adm-btn-primary">
+          <i class="bi bi-search"></i> Search
+        </button>
+        {% if search_query or tier_filter %}
+        <a href="{% url 'store:admin_users_list' %}" class="adm-btn adm-btn-ghost">
+          <i class="bi bi-x-circle"></i> Clear
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Users Table -->
+<div class="adm-card">
+  <div class="adm-card-header">
+    <span><i class="bi bi-table me-2"></i>All Users</span>
+    <span class="stat-pill">{{ farmers.paginator.count }} total</span>
+  </div>
+  <div style="overflow-x: auto;">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Contact</th>
+          <th>Location</th>
+          <th>Tier</th>
+          <th>Orders</th>
+          <th>Joined</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for farmer in farmers %}
+          {% with tier=farmer.loyalty_tier %}
+            {% if not tier_filter or tier_filter == tier.name %}
+            <tr id="user-row-{{ farmer.pk }}">
+              <!-- Index -->
+              <td class="user-meta">
+                {{ forloop.counter|add:farmers.start_index|add:"-1" }}
+              </td>
+
+              <!-- User Avatar + Name -->
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="user-avatar-ring">
+                    {% if farmer.profile_pic_db %}
+                      <img src="{% url 'store:serve_db_media' farmer.profile_pic_db.id %}" alt="{{ farmer.user.get_full_name }}">
+                    {% elif farmer.profile_pic %}
+                      <img src="{{ farmer.profile_pic.url }}" alt="{{ farmer.user.get_full_name }}">
+                    {% else %}
+                      {{ farmer.user.first_name|default:farmer.user.username|slice:":1"|upper }}
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="user-name">
+                      {{ farmer.user.get_full_name|default:farmer.user.username }}
+                    </div>
+                    <div class="user-meta">@{{ farmer.user.username }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Contact -->
+              <td>
+                <div class="user-meta">
+                  {% if farmer.user.email %}
+                    <div><i class="bi bi-envelope me-1"></i>{{ farmer.user.email }}</div>
+                  {% endif %}
+                  {% if farmer.phone %}
+                    <div><i class="bi bi-phone me-1"></i>{{ farmer.phone }}</div>
+                  {% else %}
+                    <span class="text-muted fst-italic" style="font-size:.75rem;">No phone</span>
+                  {% endif %}
+                </div>
+              </td>
+
+              <!-- Location -->
+              <td>
+                {% if farmer.address %}
+                  <div class="user-meta" style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <i class="bi bi-geo-alt me-1"></i>{{ farmer.address }}
+                  </div>
+                {% else %}
+                  <span class="user-meta fst-italic">—</span>
+                {% endif %}
+              </td>
+
+              <!-- Loyalty Tier Badge -->
+              <td>
+                {% if tier.name == 'Gold' %}
+                  <span class="tier-badge tier-gold">
+                    <span class="tier-emoji">🥇</span> Gold
+                  </span>
+                {% elif tier.name == 'Silver' %}
+                  <span class="tier-badge tier-silver">
+                    <span class="tier-emoji">🥈</span> Silver
+                  </span>
+                {% else %}
+                  <span class="tier-badge tier-bronze">
+                    <span class="tier-emoji">🥉</span> Bronze
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Order Count -->
+              <td>
+                {% with order_count=farmer.user.orders.count %}
+                  <span class="orders-count-mini">
+                    {{ order_count }} order{{ order_count|pluralize }}
+                  </span>
+                {% endwith %}
+              </td>
+
+              <!-- Joined Date -->
+              <td>
+                <div class="joined-date">
+                  <i class="bi bi-calendar3 me-1"></i>
+                  {{ farmer.user.date_joined|date:"d M Y" }}
+                </div>
+              </td>
+
+              <!-- Active Status -->
+              <td>
+                {% if farmer.user.is_active %}
+                  <span class="adm-badge green"><i class="bi bi-check-circle-fill"></i> Active</span>
+                {% else %}
+                  <span class="adm-badge red"><i class="bi bi-x-circle-fill"></i> Inactive</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endif %}
+          {% endwith %}
+        {% empty %}
+          <tr>
+            <td colspan="8">
+              <div class="adm-empty">
+                <div class="empty-icon"><i class="bi bi-people"></i></div>
+                <h5>No Users Found</h5>
+                <p>
+                  {% if search_query %}No users match "<strong>{{ search_query }}</strong>".{% else %}No registered customers yet.{% endif %}
+                </p>
+                {% if search_query %}
+                  <a href="{% url 'store:admin_users_list' %}" class="adm-btn adm-btn-ghost mt-2">
+                    <i class="bi bi-arrow-left"></i> Back to All Users
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if farmers.has_other_pages %}
+<div class="d-flex justify-content-center mt-4 gap-2 flex-wrap">
+  {% if farmers.has_previous %}
+    <a href="?page={{ farmers.previous_page_number }}&q={{ search_query }}&tier={{ tier_filter }}" class="adm-btn adm-btn-ghost adm-btn-sm">
+      <i class="bi bi-chevron-left"></i> Prev
+    </a>
+  {% endif %}
+
+  {% for num in farmers.paginator.page_range %}
+    {% if num == farmers.number %}
+      <span class="adm-btn adm-btn-primary adm-btn-sm">{{ num }}</span>
+    {% elif num >= farmers.number|add:"-2" and num <= farmers.number|add:"2" %}
+      <a href="?page={{ num }}&q={{ search_query }}&tier={{ tier_filter }}" class="adm-btn adm-btn-ghost adm-btn-sm">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if farmers.has_next %}
+    <a href="?page={{ farmers.next_page_number }}&q={{ search_query }}&tier={{ tier_filter }}" class="adm-btn adm-btn-ghost adm-btn-sm">
+      Next <i class="bi bi-chevron-right"></i>
+    </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

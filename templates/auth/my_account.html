@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Account — Mithila White Gold{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(201, 150, 42, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .profile-card:hover {
+    box-shadow: 0 15px 35px rgba(201, 150, 42, 0.1);
+  }
+  .profile-header-banner {
+    background: linear-gradient(135deg, #7A0C2E 0%, #4A0519 100%);
+    padding: 40px 20px;
+    position: relative;
+    border-bottom: 3px solid #C9962A;
+  }
+  .avatar-container {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid #C9962A;
+    background: #fdf6e3;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -70px auto 15px auto;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    z-index: 5;
+  }
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .avatar-placeholder {
+    font-size: 3.5rem;
+    color: #7A0C2E;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+  }
+  .form-section-title {
+    font-family: 'Cinzel', serif;
+    color: #7A0C2E;
+    border-bottom: 2px solid rgba(201, 150, 42, 0.2);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  .btn-farm-primary {
+    background: #7A0C2E;
+    color: #ffffff;
+    border: 2px solid #C9962A;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .btn-farm-primary:hover {
+    background: #C9962A;
+    color: #000000;
+    border-color: #7A0C2E;
+  }
+  .custom-form-label {
+    font-weight: 600;
+    color: #4A0519;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+  .form-control:focus {
+    border-color: #C9962A;
+    box-shadow: 0 0 0 0.25rem rgba(201, 150, 42, 0.25);
+  }
+  .avatar-badge {
+    background: #C9962A;
+    color: #000;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Page Header -->
+  <div class="mb-5 text-center text-md-start">
+    <h1 class="fw-bold mb-1">My <span class="text-gradient">Account</span></h1>
+    <p class="text-muted">Manage your profile, shipping details, and customize your experience.</p>
+  </div>
+
+  {% if user_form.errors or profile_form.errors %}
+  <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+    <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the errors below:</h6>
+    <ul class="mb-0 mt-2">
+      {% for field in user_form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+      {% for field in profile_form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+    </ul>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Left Column: Profile Card & Photo -->
+    <div class="col-lg-4">
+      <div class="profile-card text-center pb-4">
+        <!-- Banner Background -->
+        <div class="profile-header-banner"></div>
+
+        <!-- Avatar Image / Initials Placeholder -->
+        <div class="avatar-container">
+          {% if farmer.profile_pic_url %}
+            <img src="{{ farmer.profile_pic_url }}" alt="{{ request.user.username }}'s Avatar" class="avatar-img">
+          {% else %}
+            <span class="avatar-placeholder">
+              {{ request.user.first_name|slice:":1"|upper }}{% if request.user.last_name %}{{ request.user.last_name|slice:":1"|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- User Information Text -->
+        <h4 class="fw-bold mb-1" style="color:#7A0C2E; font-family:'Playfair Display', serif;">
+          {{ request.user.get_full_name|default:request.user.username }}
+        </h4>
+        <p class="text-muted mb-2"><i class="bi bi-envelope me-1"></i>{{ request.user.email }}</p>
+
+        <!-- Loyalty Tier Badge -->
+        <span class="avatar-badge mb-3" style="background-color: {{ farmer.loyalty_tier.color }} !important; color: {{ farmer.loyalty_tier.text_color }} !important; border: 1px solid rgba(0, 0, 0, 0.15); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+          {{ farmer.loyalty_tier.icon }} {{ farmer.loyalty_tier.name }} Member
+        </span>
+        <small class="text-muted d-block mb-3" style="font-size: 0.75rem; margin-top: -8px;">
+          ({{ farmer.loyalty_tier.count }} lifetime order{{ farmer.loyalty_tier.count|pluralize }})
+        </small>
+
+        <hr class="mx-4 my-3">
+
+        <!-- Form for Profile Picture Update -->
+        <form action="{% url 'store:my_account' %}" method="post" enctype="multipart/form-data" class="px-4 text-start">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label for="id_profile_pic" class="custom-form-label"><i class="bi bi-camera me-1"></i>Update Profile Pic</label>
+            <input type="file" name="profile_pic" id="id_profile_pic" class="form-control form-control-sm" accept="image/*">
+            <div class="form-text small">Upload a JPEG, PNG, or GIF image.</div>
+          </div>
+
+          {% if farmer.profile_pic_url %}
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="delete_profile_pic" id="id_delete_profile_pic">
+            <label class="form-check-label text-danger small fw-semibold" for="id_delete_profile_pic">
+              <i class="bi bi-trash me-1"></i>Remove Profile Picture
+            </label>
+          </div>
+          {% endif %}
+
+          <!-- Hidden inputs to submit other fields to satisfy validations if profile pic form submitted separately -->
+          <input type="hidden" name="first_name" value="{{ request.user.first_name }}">
+          <input type="hidden" name="last_name" value="{{ request.user.last_name }}">
+          <input type="hidden" name="email" value="{{ request.user.email }}">
+          <input type="hidden" name="phone" value="{{ farmer.phone }}">
+          <input type="hidden" name="address" value="{{ farmer.address }}">
+
+          <button type="submit" class="btn btn-farm-primary btn-sm w-100 mt-2">
+            <i class="bi bi-upload me-1"></i>Upload Photo
+          </button>
+        </form>
+      </div>
+
+      <!-- Quick stats/links card -->
+      <div class="profile-card p-4 mt-4 bg-light">
+        <h5 class="fw-bold mb-3" style="font-family:'Cinzel',serif; color:#7A0C2E;">Quick Links</h5>
+        <div class="d-grid gap-2">
+          <a href="{% url 'store:my_orders' %}" class="btn btn-outline-dark text-start btn-sm py-2">
+            <i class="bi bi-box-seam me-2"></i>My Orders
+          </a>
+          <a href="{% url 'store:cart' %}" class="btn btn-outline-dark text-start btn-sm py-2">
+            <i class="bi bi-cart3 me-2"></i>My Shopping Cart
+          </a>
+          <a href="{% url 'store:product_list' %}" class="btn btn-outline-dark text-start btn-sm py-2">
+            <i class="bi bi-shop me-2"></i>Continue Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Profile Details Customization Form -->
+    <div class="col-lg-8">
+      <div class="profile-card p-4 p-md-5">
+        <h3 class="form-section-title"><i class="bi bi-person-gear me-2"></i>Edit Profile Details</h3>
+        
+        <form action="{% url 'store:my_account' %}" method="post">
+          {% csrf_token %}
+          
+          <!-- Personal Info Grid -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="id_first_name" class="custom-form-label">First Name <span class="text-danger">*</span></label>
+              <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ request.user.first_name }}" required>
+            </div>
+            <div class="col-md-6">
+              <label for="id_last_name" class="custom-form-label">Last Name <span class="text-danger">*</span></label>
+              <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ request.user.last_name }}" required>
+            </div>
+          </div>
+
+          <!-- Contact Grid -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="id_email" class="custom-form-label">Email Address <span class="text-danger">*</span></label>
+              <input type="email" name="email" id="id_email" class="form-control" value="{{ request.user.email }}" required>
+            </div>
+            <div class="col-md-6">
+              <label for="id_phone" class="custom-form-label">Phone Number <span class="text-danger">*</span></label>
+              <input type="text" name="phone" id="id_phone" class="form-control" value="{{ farmer.phone }}" required>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="mb-4">
+            <label for="id_address" class="custom-form-label">Address / Village <span class="text-danger">*</span></label>
+            <textarea name="address" id="id_address" class="form-control" rows="3" placeholder="Enter your full address..." required>{{ farmer.address }}</textarea>
+          </div>
+
+          <!-- Save Button -->
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-farm-primary btn-lg fw-bold">
+              <i class="bi bi-check-circle me-2"></i>Save Account Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

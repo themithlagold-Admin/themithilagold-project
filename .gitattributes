@@ -1,0 +1,23 @@
+# Track large binary files with Git LFS
+# Required for Hugging Face Spaces — repository limit is 1 GB without LFS
+
+# Shell scripts must have LF endings (Linux/Docker requirement)
+*.sh text eol=lf
+
+# SQLite databases (large — must use LFS)
+*.sqlite3 filter=lfs diff=lfs merge=lfs -text
+*.sqlite  filter=lfs diff=lfs merge=lfs -text
+*.db      filter=lfs diff=lfs merge=lfs -text
+
+# Static media
+*.png  filter=lfs diff=lfs merge=lfs -text
+*.jpg  filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.gif  filter=lfs diff=lfs merge=lfs -text
+*.webp filter=lfs diff=lfs merge=lfs -text
+*.svg  filter=lfs diff=lfs merge=lfs -text
+*.ico  filter=lfs diff=lfs merge=lfs -text
+*.pdf  filter=lfs diff=lfs merge=lfs -text
+*.mp4  filter=lfs diff=lfs merge=lfs -text
+*.webm filter=lfs diff=lfs merge=lfs -text
+*.zip  filter=lfs diff=lfs merge=lfs -text

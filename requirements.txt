@@ -1,0 +1,32 @@
+# Core Django
+Django>=4.2.11,<5.0
+Pillow>=10.0.0
+
+# Forms
+django-crispy-forms>=2.1
+crispy-bootstrap5>=2024.2
+
+# PDF Generation
+reportlab>=4.2.2
+
+# Database
+psycopg2-binary>=2.9.9
+dj-database-url>=2.1.0
+
+# Configuration
+python-decouple>=3.8
+
+# Static Files
+whitenoise>=6.6.0
+
+# Production Server
+gunicorn>=21.2.0
+
+# MIME type detection (Linux - used in Docker/HF Spaces)
+python-magic>=0.4.27
+
+# Memory & process monitoring
+psutil>=5.9.8
+
+# Google Gemini AI
+google-genai>=1.0.0

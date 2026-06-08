@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="mb-4">
+        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+    </div>
+    <h2 class="text-danger mb-3">Your ID is Blacklisted</h2>
+    <p class="lead mb-4">You cannot access the seller dashboard or perform any work because your account has been blacklisted.</p>
+    
+    <p class="mb-4">Please contact the administrator for more information.</p>
+    
+    <div class="d-flex justify-content-center gap-3">
+        <a href="tel:{{ admin_phone }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-telephone-fill"></i> Contact Admin
+        </a>
+        <a href="mailto:{{ admin_email }}" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-envelope-fill"></i> Email Admin
+        </a>
+    </div>
+</div>
+{% endblock %}

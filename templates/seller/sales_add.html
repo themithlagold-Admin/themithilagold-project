@@ -1,0 +1,64 @@
+{% extends 'seller/base_seller.html' %}
+{% block title %}Record Manual Sale{% endblock %}
+
+{% block seller_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="h4 mb-0 fw-bold" style="color:var(--admin-dark)">Record Walk-in Sale</h2>
+  <a href="{% url 'store:seller_sales_list' %}" class="adm-btn adm-btn-ghost">Back to Sales</a>
+</div>
+
+<div class="adm-card">
+  <div class="adm-card-header">
+    <span>Sale Details</span>
+  </div>
+  <div class="adm-card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="adm-form-group">
+            <label>Customer Name *</label>
+            <input type="text" name="customer_name" class="adm-input" required>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="adm-form-group">
+            <label>Customer Phone (Optional)</label>
+            <input type="text" name="customer_phone" class="adm-input">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="adm-form-group">
+            <label>Product *</label>
+            <select name="product" class="adm-input" required>
+              <option value="">Select a product...</option>
+              {% for p in products %}
+              <option value="{{ p.pk }}">{{ p.name }} (₹{{ p.price }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="adm-form-group">
+            <label>Quantity *</label>
+            <input type="number" name="quantity" class="adm-input" value="1" min="1" required>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="adm-form-group">
+            <label>Payment Mode *</label>
+            <select name="payment_mode" class="adm-input">
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="adm-btn adm-btn-primary mt-4 w-100">
+        <i class="bi bi-receipt"></i> Record Sale & Generate Receipt
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

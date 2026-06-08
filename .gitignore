@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual environments
+venv/
+env/
+.env
+*.env
+
+# Django
+*.sqlite3
+db.sqlite3
+db_makhana.sqlite3
+staticfiles/
+media/
+
+# Secrets & local config
+local_settings.py
+*.secret
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test files
+test_gemini.py
+list_models.py
+scratch/

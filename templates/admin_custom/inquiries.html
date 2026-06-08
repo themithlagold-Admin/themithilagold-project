@@ -1,0 +1,201 @@
+{% extends 'admin_custom/base_admin.html' %}
+{% block title %}Inquiry Inbox — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  .inq-admin-card {
+    border-left: 4px solid transparent;
+    transition: all 0.25s ease;
+  }
+  .inq-admin-card.inq-unread {
+    border-left: 4px solid var(--admin-accent);
+    background: rgba(201, 150, 42, 0.02);
+  }
+  .inq-admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+  }
+  .inq-admin-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--admin-border);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .inq-admin-card-body {
+    padding: 1.5rem;
+  }
+  .inq-field-group {
+    background: #fbf9f3;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(232, 219, 176, 0.4);
+    height: 100%;
+  }
+  .inq-field-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--admin-muted);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .inq-field-val {
+    font-size: 0.95rem;
+    color: var(--admin-text);
+  }
+  .inq-message-box {
+    background: #fbf9f3;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border: 1px solid rgba(232, 219, 176, 0.4);
+  }
+</style>
+{% endblock %}
+
+{% block page_heading %}📬 Inquiry Inbox{% endblock %}
+
+{% block content %}
+<div class="adm-page-header">
+  <div>
+    <h1>Inquiry Inbox
+      {% if unread_count > 0 %}
+      <span class="adm-badge red ms-2">{{ unread_count }} Unread</span>
+      {% endif %}
+    </h1>
+    <p>Customer inquiries submitted via the website.</p>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="adm-card mb-4">
+  <form method="GET" class="d-flex flex-wrap align-items-end gap-3 p-3">
+    <div>
+      <label class="adm-form-label">Inquiry Type</label>
+      <select name="type" class="adm-form-control" style="min-width:170px;">
+        <option value="">All Types</option>
+        {% for value, label in inquiry_types %}
+        <option value="{{ value }}" {% if filter_type == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="adm-form-label">Status</label>
+      <select name="read" class="adm-form-control" style="min-width:140px;">
+        <option value="">All</option>
+        <option value="0" {% if filter_read == '0' %}selected{% endif %}>🔵 Unread</option>
+        <option value="1" {% if filter_read == '1' %}selected{% endif %}>✅ Read</option>
+      </select>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="adm-btn adm-btn-primary">
+        <i class="bi bi-funnel-fill"></i> Filter
+      </button>
+      <a href="{% url 'store:admin_inquiries' %}" class="adm-btn adm-btn-ghost">
+        <i class="bi bi-x-circle"></i> Clear
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Inquiry Cards -->
+{% if inquiries %}
+<div style="display:flex; flex-direction:column; gap:1rem;">
+  {% for inq in inquiries %}
+  <div class="adm-card inq-admin-card {% if not inq.is_read %}inq-unread{% endif %}">
+    <div class="inq-admin-card-top">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <!-- Type badge -->
+        <span class="adm-badge {% if inq.inquiry_type == 'bulk_order' %}green{% elif inq.inquiry_type == 'business' %}purple{% elif inq.inquiry_type == 'complaint' %}red{% else %}blue{% endif %}">
+          {{ inq.get_inquiry_type_display }}
+        </span>
+        {% if not inq.is_read %}
+        <span class="adm-badge amber" style="font-size:0.68rem;">● NEW</span>
+        {% endif %}
+        <span style="color:var(--admin-muted);font-size:0.8rem;">
+          <i class="bi bi-clock me-1"></i>{{ inq.created_at|date:"d M Y, h:i A" }}
+        </span>
+      </div>
+      <!-- Actions -->
+      <div class="d-flex gap-2">
+        <form method="POST" action="{% url 'store:admin_inquiry_mark_read' inq.pk %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="adm-btn adm-btn-ghost adm-btn-sm" title="{% if inq.is_read %}Mark Unread{% else %}Mark Read{% endif %}">
+            <i class="bi bi-{% if inq.is_read %}envelope-fill{% else %}envelope-open-fill{% endif %}"></i>
+            {% if inq.is_read %}Unread{% else %}Read{% endif %}
+          </button>
+        </form>
+        <form method="POST" action="{% url 'store:admin_inquiry_delete' inq.pk %}" style="margin:0;"
+              onsubmit="return confirm('Delete this inquiry from {{ inq.name }}?');">
+          {% csrf_token %}
+          <button type="submit" class="adm-btn adm-btn-sm" style="background:rgba(248,81,73,.12);color:#f85149;border:1px solid rgba(248,81,73,.25);">
+            <i class="bi bi-trash3-fill"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="inq-admin-card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="inq-field-group">
+            <div class="inq-field-label"><i class="bi bi-person-fill me-1"></i>Name</div>
+            <div class="inq-field-val fw-bold">{{ inq.name }}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="inq-field-group">
+            <div class="inq-field-label"><i class="bi bi-telephone-fill me-1"></i>Phone</div>
+            <div class="inq-field-val">
+              <a href="tel:{{ inq.phone }}" style="color:var(--admin-accent);font-weight:600;">{{ inq.phone }}</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="inq-field-group">
+            <div class="inq-field-label"><i class="bi bi-envelope-fill me-1"></i>Email</div>
+            <div class="inq-field-val">
+              <a href="mailto:{{ inq.email }}" style="color:var(--admin-accent);">{{ inq.email }}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="inq-message-box mt-3">
+        <div class="inq-field-label mb-2"><i class="bi bi-chat-left-text-fill me-1"></i>Message</div>
+        <p style="margin:0; font-size:0.92rem; line-height:1.7; color:var(--admin-text);">{{ inq.message }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if inquiries.has_other_pages %}
+<div class="d-flex justify-content-center gap-2 mt-4">
+  {% if inquiries.has_previous %}
+  <a href="?page={{ inquiries.previous_page_number }}&type={{ filter_type }}&read={{ filter_read }}"
+     class="adm-btn adm-btn-ghost adm-btn-sm"><i class="bi bi-chevron-left"></i> Prev</a>
+  {% endif %}
+  <span class="adm-btn adm-btn-sm" style="background:var(--admin-card);cursor:default;">
+    Page {{ inquiries.number }} of {{ inquiries.paginator.num_pages }}
+  </span>
+  {% if inquiries.has_next %}
+  <a href="?page={{ inquiries.next_page_number }}&type={{ filter_type }}&read={{ filter_read }}"
+     class="adm-btn adm-btn-ghost adm-btn-sm">Next <i class="bi bi-chevron-right"></i></a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="adm-card">
+  <div class="adm-empty" style="padding:4rem 2rem;">
+    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+    <h5>No inquiries found</h5>
+    <p>Customer inquiries submitted via the website will appear here.</p>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

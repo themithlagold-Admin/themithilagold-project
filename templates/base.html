@@ -1,0 +1,474 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ page_title|default:"Mithila White Gold" }} — Mithila White Gold | The Essence of Tradition in Every Crunch{% endblock %}</title>
+  <meta name="description"
+    content="{% block meta_description %}Mithila White Gold — Premium makhana (fox nuts) from the heart of Mithila, Bihar. The Essence of Tradition in Every Crunch.{% endblock %}">
+
+  <!-- Google Fonts: Cinzel (headings) + Playfair Display + Hind (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Hind:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- ════════════════════ NAVBAR ════════════════════ -->
+  <nav class="navbar navbar-expand-xl navbar-farm sticky-top">
+    <div class="container-fluid px-3 px-lg-4">
+      <!-- Brand -->
+      <a class="navbar-brand d-flex align-items-center gap-2 flex-shrink-0" href="{% url 'store:home' %}">
+        <img src="{% static 'img/logo.png' %}" alt="Mithila White Gold Logo" class="nav-logo"
+          onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';"><span
+          style="display:none;width:42px;height:42px;background:#7A0C2E;border-radius:50%;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid #C9962A;">🪷</span>
+        <div>
+          <div class="brand-name">Mithila White Gold</div>
+          <div class="brand-tagline d-none d-xl-block">The Essence of Tradition in Every Crunch</div>
+        </div>
+      </a>
+
+      <!-- Mobile: Cart + Toggler -->
+      <div class="d-flex d-xl-none align-items-center gap-2 ms-auto me-2">
+        <a href="{% url 'store:cart' %}" class="btn btn-outline-warning btn-sm position-relative">
+          <i class="bi bi-cart3"></i>
+          {% if cart_count > 0 %}
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">{{ cart_count }}</span>
+          {% endif %}
+        </a>
+      </div>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" style="color:var(--gold-light);">
+        <i class="bi bi-list" style="font-size:1.4rem;"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarMain">
+        <!-- Centre nav links -->
+        <ul class="navbar-nav mx-auto mb-2 mb-xl-0">
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+              href="{% url 'store:home' %}">
+              <i class="bi bi-house-fill me-1"></i>Home
+            </a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}"
+              href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-grid-fill me-1"></i>Products
+            </a>
+            <ul class="dropdown-menu dropdown-menu-farm">
+              <li><a class="dropdown-item" href="{% url 'store:product_list' %}">All Products</a></li>
+              <li><hr class="dropdown-divider"></li>
+              {% for cat in categories %}
+              <li><a class="dropdown-item" href="{% url 'store:product_list' %}?category={{ cat.slug }}">{{ cat.icon }} {{ cat.name }}</a></li>
+              {% empty %}
+              <li><span class="dropdown-item text-muted">No categories</span></li>
+              {% endfor %}
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}"
+              href="{% url 'store:contact' %}">
+              <i class="bi bi-telephone-fill me-1"></i>Contact
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+              href="{% url 'store:about' %}">
+              <i class="bi bi-info-circle-fill me-1"></i>About
+            </a>
+          </li>
+          {% if user.is_staff %}
+          <li class="nav-item">
+            <a class="nav-link text-warning fw-bold" href="{% url 'store:admin_dashboard' %}">
+              <i class="bi bi-speedometer2 me-1"></i>Admin
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+
+        <!-- Right actions -->
+        <div class="d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center gap-2 flex-shrink-0 mt-3 mt-xl-0 pt-3 pt-xl-0 border-top border-top-xl-0" style="border-color: rgba(253,246,227,0.1) !important;">
+          <!-- Cart (desktop) -->
+          <a href="{% url 'store:cart' %}"
+            class="btn btn-outline-warning btn-sm position-relative d-none d-xl-flex align-items-center gap-1">
+            <i class="bi bi-cart3"></i> Cart
+            {% if cart_count > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">{{ cart_count }}</span>
+            {% endif %}
+          </a>
+
+          {% if user.is_authenticated %}
+          <!-- Authenticated user dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-farm-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle me-1"></i>{{ user.first_name|default:user.username|truncatechars:10 }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-farm">
+              <li><a class="dropdown-item" href="{% url 'store:my_account' %}"><i class="bi bi-person-fill me-2"></i>My Account</a></li>
+              <li><a class="dropdown-item" href="{% url 'store:my_orders' %}"><i class="bi bi-bag-check me-2"></i>My Orders</a></li>
+              <li><a class="dropdown-item" href="{% url 'store:seller_request' %}"><i class="bi bi-shop me-2"></i>Seller Dashboard</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-warning fw-bold" href="{% url 'store:admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Admin Panel</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form action="{% url 'store:logout' %}" method="post" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                </form>
+              </li>
+            </ul>
+          </div>
+          {% else %}
+          <!-- Guest: single Account dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-outline-warning btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person me-1"></i>Login
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-farm">
+              <li><a class="dropdown-item" href="{% url 'store:login' %}"><i class="bi bi-person-fill me-2"></i>Buyer Login</a></li>
+              <li><a class="dropdown-item" href="{% url 'store:seller_login' %}"><i class="bi bi-shop me-2"></i>Seller Login</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item fw-bold" style="color:var(--gold-light);" href="{% url 'store:register' %}"><i class="bi bi-person-plus-fill me-2"></i>Register Free</a></li>
+            </ul>
+          </div>
+          <a href="{% url 'store:register' %}" class="btn btn-farm-primary btn-sm">
+            <i class="bi bi-person-plus-fill me-1"></i>Register
+          </a>
+          <a href="{% url 'store:admin_dashboard' %}" class="btn btn-sm" style="background:#f59e0b;color:#000;font-weight:700;" title="Admin Panel">
+            <i class="bi bi-speedometer2"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ════════════════════ FOOTER ════════════════════ -->
+  <footer class="footer-farm mt-5">
+    <div class="container">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="{% static 'img/logo.png' %}" alt="Mithila White Gold Logo" class="footer-logo"
+              onerror="this.onerror=null;this.style.display='none';">
+            <div>
+              <h5 class="mb-0 fw-bold" style="color:var(--gold-light);font-family:'Cinzel',serif;">Mithila White Gold</h5>
+              <small style="color:rgba(253,246,227,0.65);font-size:0.7rem;letter-spacing:0.06em;">The Essence of Tradition in Every Crunch</small>
+            </div>
+          </div>
+          <p class="text-light opacity-75 small">{{ site_settings.tagline }}</p>
+          <p class="mb-1"><i class="bi bi-geo-alt-fill text-light me-2"></i><small>{{ site_settings.address }}</small>
+          </p>
+          <p class="mb-0"><i class="bi bi-signpost-fill text-light me-2"></i><small>{{ site_settings.landmark }}</small></p>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h6 class="fw-bold mb-3" style="color:var(--gold-light);font-family:'Cinzel',serif;letter-spacing:0.06em;">Quick Links</h6>
+          <ul class="list-unstyled">
+            <li><a href="{% url 'store:home' %}" class="footer-link">🏠 Home</a></li>
+            <li><a href="{% url 'store:product_list' %}" class="footer-link">🛒 Products</a></li>
+            <li><a href="{% url 'store:about' %}" class="footer-link">🪷 About Us</a></li>
+            <li><a href="{% url 'store:contact' %}" class="footer-link">📞 Contact</a></li>
+            <li><a href="{% url 'store:my_orders' %}" class="footer-link">📦 My Orders</a></li>
+            <li><a href="{% url 'store:my_account' %}" class="footer-link">👤 My Account</a></li>
+            <li><a href="{% url 'store:seller_request' %}" class="footer-link">🏪 Sell with us</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-6">
+          <h6 class="fw-bold mb-3" style="color:var(--gold-light);font-family:'Cinzel',serif;letter-spacing:0.06em;">Categories</h6>
+          <ul class="list-unstyled">
+            {% for cat in categories %}
+            <li><a href="{% url 'store:product_list' %}?category={{ cat.slug }}" class="footer-link">{{ cat.icon }} {{ cat.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h6 class="fw-bold mb-3" style="color:var(--gold-light);font-family:'Cinzel',serif;letter-spacing:0.06em;">Contact Us</h6>
+          <p class="mb-1">
+            <i class="bi bi-telephone-fill text-warning me-2"></i>
+            <a href="tel:{{ site_settings.phone_primary }}" class="footer-link">Satyam Jha: {{ site_settings.phone_primary }}</a>
+          </p>
+          {% if site_settings.phone_secondary %}
+          <p class="mb-1">
+            <i class="bi bi-telephone-fill text-warning me-2"></i>
+            <a href="tel:{{ site_settings.phone_secondary }}" class="footer-link">Alt Phone: {{ site_settings.phone_secondary }}</a>
+          </p>
+          {% endif %}
+          {% if site_settings.email %}
+          <p class="mb-1">
+            <i class="bi bi-envelope-fill text-warning me-2"></i>
+            <a href="mailto:{{ site_settings.email }}" class="footer-link">{{ site_settings.email }}</a>
+          </p>
+          {% endif %}
+          <p class="mb-0 mt-2">
+            <i class="bi bi-receipt text-warning me-2"></i>
+            <small class="text-light opacity-75">GST: {{ site_settings.gst_number }}</small>
+          </p>
+        </div>
+      </div>
+      <hr class="border-secondary mt-4">
+      <div class="row align-items-center py-3">
+        <div class="col-md-6 text-center text-md-start">
+          <small class="text-light opacity-50">© 2026 Mithila White Gold. All rights reserved.</small>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <small class="text-light opacity-50">Developed by ❤️ Satyam Jha</small>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+
+  <!-- ════════════════════ CHATBOT WIDGET ════════════════════ -->
+  <style>
+    .chatbot-toggler {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: var(--dark-bg);
+      border: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .chatbot-toggler:hover {
+      transform: scale(1.1);
+      background: var(--gold-light);
+    }
+    .chatbot-window {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      width: 350px;
+      max-width: calc(100vw - 40px);
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      border: 1px solid var(--gold);
+    }
+    .chatbot-window.show {
+      display: flex;
+    }
+    .chatbot-header {
+      background: var(--crimson);
+      color: var(--gold-light);
+      padding: 15px;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chatbot-body {
+      padding: 15px;
+      height: 350px;
+      overflow-y: auto;
+      background: #fdf6e3;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-msg {
+      max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--gold-light);
+      color: var(--dark-bg);
+      border-bottom-right-radius: 2px;
+    }
+    .chat-msg.bot {
+      align-self: flex-start;
+      background: white;
+      color: var(--dark-bg);
+      border: 1px solid var(--gold);
+      border-bottom-left-radius: 2px;
+    }
+    .chatbot-footer {
+      padding: 10px;
+      background: white;
+      border-top: 1px solid #ddd;
+      display: flex;
+      gap: 5px;
+    }
+    .chatbot-input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 8px 15px;
+      outline: none;
+    }
+    .chatbot-input:focus {
+      border-color: var(--gold);
+    }
+    .chatbot-send {
+      background: var(--gold);
+      color: var(--dark-bg);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .chat-actions {
+      padding: 5px 15px;
+      background: white;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+  </style>
+
+  <button class="chatbot-toggler" id="chatToggler" title="Ask AI Assistant">
+    <i class="bi bi-chat-dots-fill"></i>
+  </button>
+
+  <div class="chatbot-window" id="chatWindow">
+    <div class="chatbot-header">
+      <span><i class="bi bi-robot"></i> Mithila AI</span>
+      <button class="btn-close btn-close-white" style="font-size:0.8rem;" id="chatClose"></button>
+    </div>
+    <div class="chatbot-body" id="chatBody">
+      <div class="chat-msg bot">Namaste! How can I help you today?</div>
+    </div>
+    <div class="chat-actions d-none" id="chatActions">
+      <a href="#" id="downloadPdfBtn" target="_blank" class="text-decoration-none text-danger fw-bold"><i class="bi bi-file-earmark-pdf-fill"></i> Download Chat PDF</a>
+    </div>
+    <div class="chatbot-footer">
+      <input type="text" class="chatbot-input" id="chatInput" placeholder="Type a message..." autocomplete="off">
+      <button class="chatbot-send" id="chatSend"><i class="bi bi-send-fill"></i></button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const toggler = document.getElementById('chatToggler');
+      const chatWin = document.getElementById('chatWindow');
+      const closeBtn = document.getElementById('chatClose');
+      const input = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('chatSend');
+      const chatBody = document.getElementById('chatBody');
+      const chatActions = document.getElementById('chatActions');
+      const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+      
+      let sessionId = null;
+
+      toggler.addEventListener('click', () => {
+        chatWin.classList.toggle('show');
+        if (chatWin.classList.contains('show')) {
+          input.focus();
+        }
+      });
+
+      closeBtn.addEventListener('click', () => {
+        chatWin.classList.remove('show');
+      });
+
+      function addMessage(text, role) {
+        const div = document.createElement('div');
+        div.className = `chat-msg ${role}`;
+        div.textContent = text;
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }
+
+      function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        input.value = '';
+
+        fetch('{% url "store:chatbot_api" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: text, session_id: sessionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.response) {
+            addMessage(data.response, 'bot');
+            sessionId = data.session_id;
+            
+            // Show PDF download link
+            chatActions.classList.remove('d-none');
+            // update URL dynamically
+            const urlPattern = "{% url 'store:chat_report_pdf' 'REPLACE' %}";
+            downloadPdfBtn.href = urlPattern.replace('REPLACE', sessionId);
+          } else {
+            addMessage("Error: Could not connect to assistant.", 'bot');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          addMessage("Network Error: Could not connect.", 'bot');
+        });
+      }
+
+      sendBtn.addEventListener('click', sendMessage);
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+      });
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

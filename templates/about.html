@@ -1,0 +1,653 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us — Mithila White Gold{% endblock %}
+{% block meta_description %}Learn about Mithila White Gold — our mission to bring authentic GI-tagged makhana from the sacred wetlands of Mithila to your home. Meet our founder Satyam Kumar Jha.{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Custom color overrides for About Us Forest Emerald Page */
+  :root {
+    --about-emerald-dark: #072215;
+    --about-emerald-mid: #0e3b24;
+    --about-emerald: #155734;
+    --about-emerald-light: #258f56;
+    --about-mint: #e8f5e9;
+    --about-mint-accent: #c8e6c9;
+    --about-sage-light: #f1f8f5;
+    --about-gold: #c9962a;
+    --about-gold-light: #e8b84b;
+    --about-gold-bright: #f5d27a;
+    --about-gold-dark: #a67a1e;
+  }
+
+  /* Hero Section */
+  .about-hero-emerald {
+    background: linear-gradient(135deg, var(--about-emerald-dark) 0%, var(--about-emerald-mid) 50%, var(--about-emerald) 100%);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 4px solid var(--about-gold);
+    box-shadow: 0 10px 30px rgba(7, 34, 21, 0.4);
+  }
+  
+  .about-hero-pattern-emerald {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(232, 184, 75, 0.15) 0%, transparent 45%),
+      radial-gradient(circle at 90% 80%, rgba(37, 143, 86, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .about-hero-logo {
+    width: clamp(180px, 30vw, 280px);
+    height: clamp(180px, 30vw, 280px);
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 
+      0 0 0 4px var(--about-gold-light),
+      0 0 0 10px rgba(232, 184, 75, 0.2),
+      0 15px 50px rgba(7, 34, 21, 0.7);
+    transition: all 0.5s ease-in-out;
+  }
+  .about-hero-logo:hover {
+    transform: scale(1.05) rotate(5deg);
+    box-shadow: 
+      0 0 0 6px var(--about-gold-bright),
+      0 0 0 15px rgba(232, 184, 75, 0.35),
+      0 20px 60px rgba(7, 34, 21, 0.8);
+  }
+
+  /* Roots & Story Staggered Cards */
+  .roots-section {
+    background-color: #fafdfb;
+  }
+  .story-card-custom {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid rgba(21, 87, 52, 0.15);
+    box-shadow: 0 8px 32px rgba(7, 34, 21, 0.04);
+    padding: 3rem;
+    transition: var(--transition);
+  }
+  .story-card-custom:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(21, 87, 52, 0.12);
+    border-color: var(--about-emerald);
+  }
+
+  /* Timeline Process Section */
+  .process-section {
+    background-color: var(--about-sage-light);
+    border-top: 1px solid rgba(21, 87, 52, 0.08);
+    border-bottom: 1px solid rgba(21, 87, 52, 0.08);
+  }
+  .process-card-custom {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid rgba(21, 87, 52, 0.12);
+    padding: 2.25rem 1.75rem;
+    height: 100%;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .process-card-custom:hover {
+    transform: translateY(-6px);
+    border-color: var(--about-emerald);
+    box-shadow: 0 12px 36px rgba(21, 87, 52, 0.1);
+  }
+  .process-card-custom::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--about-emerald) 0%, var(--about-gold) 100%);
+    opacity: 0;
+    transition: var(--transition);
+  }
+  .process-card-custom:hover::before {
+    opacity: 1;
+  }
+  .process-number {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--about-mint);
+    color: var(--about-emerald);
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    border: 2px solid var(--about-emerald);
+  }
+
+  /* Visionary Letter section */
+  .visionary-section {
+    background-color: white;
+  }
+  .visionary-letter-wrapper {
+    background: linear-gradient(150deg, #fdfdfb 0%, #f6faf7 100%);
+    border: 1px solid rgba(21, 87, 52, 0.15);
+    border-left: 6px solid var(--about-emerald);
+    border-radius: var(--radius);
+    padding: 3.5rem 3rem;
+    box-shadow: 0 10px 40px rgba(7, 34, 21, 0.05);
+  }
+  .visionary-img-container {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid var(--about-emerald);
+    padding: 5px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(21, 87, 52, 0.2);
+    margin: 0 auto 1.5rem;
+    transition: var(--transition);
+  }
+  .visionary-img-container:hover {
+    transform: rotate(-3deg) scale(1.03);
+    border-color: var(--about-gold);
+    box-shadow: 0 12px 35px rgba(201, 150, 42, 0.35);
+  }
+  .visionary-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    object-position: center top;
+  }
+  .visionary-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    color: var(--about-emerald-dark);
+    font-size: 1.6rem;
+  }
+  .visionary-subtitle {
+    font-family: 'Hind', sans-serif;
+    color: var(--about-gold-dark);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+  }
+  .visionary-stat-box {
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 1.25rem 0.75rem;
+    border: 1px solid rgba(21, 87, 52, 0.15);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    transition: var(--transition);
+    height: 100%;
+  }
+  .visionary-stat-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(21, 87, 52, 0.1);
+    border-color: var(--about-emerald);
+  }
+  .visionary-stat-icon {
+    font-size: 1.6rem;
+    margin-bottom: 0.35rem;
+  }
+  .visionary-stat-val {
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--about-emerald-dark);
+  }
+  .visionary-stat-lbl {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Core Pillars Cards */
+  .pillars-section {
+    background: linear-gradient(135deg, var(--about-emerald-dark) 0%, #0d3822 60%, #154c30 100%);
+    color: white;
+    border-top: 4px solid var(--about-gold);
+    border-bottom: 4px solid var(--about-gold);
+  }
+  .pillar-card-custom {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(232, 184, 75, 0.2);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    transition: var(--transition);
+    height: 100%;
+    backdrop-filter: blur(8px);
+  }
+  .pillar-card-custom:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--about-gold-light);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(232, 184, 75, 0.15);
+  }
+  .pillar-icon-custom {
+    font-size: 3rem;
+    margin-bottom: 1.25rem;
+    display: inline-block;
+  }
+  .pillar-title-custom {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--about-gold-light);
+    margin-bottom: 0.75rem;
+  }
+  .pillar-desc-custom {
+    font-size: 0.88rem;
+    color: rgba(253, 246, 227, 0.7);
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* Timeline */
+  .timeline-custom {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-left: 2rem;
+  }
+  .timeline-custom::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--about-emerald) 0%, var(--about-gold) 100%);
+    border-radius: 3px;
+  }
+  .timeline-item-custom {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+  .timeline-item-custom:last-child { margin-bottom: 0; }
+  .timeline-dot-custom {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--about-emerald);
+    box-shadow: 0 0 0 4px rgba(21, 87, 52, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    z-index: 1;
+    margin-left: -25px;
+  }
+  .timeline-content-custom {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+    border: 1px solid rgba(21, 87, 52, 0.12);
+    flex: 1;
+    transition: var(--transition);
+  }
+  .timeline-content-custom:hover {
+    box-shadow: 0 12px 32px rgba(21, 87, 52, 0.1);
+    border-color: var(--about-emerald);
+    transform: translateX(4px);
+  }
+  .timeline-year-custom {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--about-gold-dark);
+    margin-bottom: 0.35rem;
+    font-family: 'Cinzel', serif;
+  }
+  .timeline-title-custom {
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--about-emerald-dark);
+    margin-bottom: 0.5rem;
+  }
+  .timeline-desc-custom {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.65;
+  }
+  
+  .about-cta-section {
+    background: linear-gradient(135deg, var(--about-emerald-dark) 0%, var(--about-emerald-mid) 100%);
+    border-top: 4px solid var(--about-gold);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════ BOTANICAL ABOUT HERO ══════════ -->
+<section class="about-hero-emerald py-5 position-relative">
+  <div class="about-hero-pattern-emerald"></div>
+  <div class="container py-4 py-lg-5">
+    <div class="row align-items-center min-vh-50 py-3">
+      <div class="col-lg-7 text-white text-center text-lg-start">
+        <div class="hero-badge badge-farm mb-3" style="background:rgba(255,255,255,0.12); border-color:var(--about-gold-light); color:var(--about-gold-bright);">
+          🪷 Natural Heritage
+        </div>
+        <h1 class="hero-title mb-3" style="font-size: clamp(2.2rem, 5vw, 3.6rem);">
+          Our Roots, Our <span style="color:var(--about-gold-bright);">Passion</span>
+        </h1>
+        <p class="about-hero-subtitle text-white-50 fs-5 mb-4" style="line-height:1.8; max-width:620px; font-weight: 300;">
+          Harvested from the sacred wetlands of Mithila, Bihar, we bring you pure, crunchy, and GI-tagged makhana. Direct from nature’s bounty to your home.
+        </p>
+        <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start mt-4">
+          <a href="{% url 'store:product_list' %}" class="btn btn-farm-primary btn-lg px-5 py-3 fw-bold">
+            <i class="bi bi-grid-3x3-gap-fill me-2"></i>Browse Catalog
+          </a>
+          <a href="{% url 'store:contact' %}" class="btn btn-outline-warning btn-lg px-5 py-3 fw-bold" style="border-color:var(--about-gold-light)!important; color:var(--about-gold-light)!important;">
+            <i class="bi bi-telephone me-2"></i>Get in Touch
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-5 text-center mt-5 mt-lg-0">
+        <div class="position-relative d-inline-block">
+          <img src="{% static 'img/logo.png' %}" alt="Mithila White Gold Logo" class="about-hero-logo animate-float"
+               onerror="this.onerror=null;this.src='{% static 'img/product_placeholder.svg' %}'">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ OUR ROOTS & STORIES (STAGGERED) ══════════ -->
+<section class="roots-section py-5">
+  <div class="container py-3">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title text-dark">Our <span class="text-gradient">Story & Wetlands</span></h2>
+      <p class="section-subtitle text-muted">Upholding the sacred heritage of Mithila Makhana</p>
+    </div>
+    
+    <div class="row g-5 align-items-stretch">
+      <!-- Mission -->
+      <div class="col-lg-6">
+        <div class="story-card-custom h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <span class="fs-1">🎯</span>
+              <div>
+                <span class="badge" style="background-color: var(--about-mint); color: var(--about-emerald); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Our Mission</span>
+                <h3 class="mt-1 mb-0 fs-4 fw-bold text-dark" style="font-family:'Cinzel',serif;">Heritage to Table</h3>
+              </div>
+            </div>
+            <p class="text-muted lh-lg fs-6 mb-4">
+              Our mission is to <strong>empower the farmers of Mithila</strong> while delivering the world's finest GI-tagged makhana to health-conscious families across India. We bridge the gap between traditional harvesters and modern consumers, ensuring that every purchase directly supports rural livelihoods.
+            </p>
+            <ul class="list-unstyled mb-4">
+              <li class="py-2 border-bottom border-light d-flex align-items-start gap-2 text-dark"><i class="bi bi-patch-check-fill text-success mt-1"></i> Source 100% authentic makhana directly from wetlands</li>
+              <li class="py-2 border-bottom border-light d-flex align-items-start gap-2 text-dark"><i class="bi bi-patch-check-fill text-success mt-1"></i> Zero adulteration — pure, crunchy, and preservative-free</li>
+              <li class="py-2 border-bottom border-light d-flex align-items-start gap-2 text-dark"><i class="bi bi-patch-check-fill text-success mt-1"></i> Fair, direct-to-farmer trade and transparent payouts</li>
+              <li class="py-2 d-flex align-items-start gap-2 text-dark"><i class="bi bi-patch-check-fill text-success mt-1"></i> Uphold the Geographical Indication (GI) tag of Mithila</li>
+            </ul>
+          </div>
+          <div class="p-3 rounded" style="background-color:var(--about-sage-light); border-left: 3px solid var(--about-emerald);">
+            <p class="mb-0 text-muted fst-italic fs-6">
+              <i class="bi bi-quote me-1 text-success fs-5"></i>From the sacred ponds of Mithila to your doorstep — with love, purity, and tradition.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vision -->
+      <div class="col-lg-6">
+        <div class="story-card-custom h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <span class="fs-1">🔭</span>
+              <div>
+                <span class="badge" style="background-color: rgba(201, 150, 42, 0.12); color: var(--about-gold-dark); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Our Vision</span>
+                <h3 class="mt-1 mb-0 fs-4 fw-bold text-dark" style="font-family:'Cinzel',serif;">A Global Superfood</h3>
+              </div>
+            </div>
+            <p class="text-muted lh-lg fs-6 mb-4">
+              We envision <strong>Mithila White Gold</strong> becoming India's most trusted makhana brand — recognised globally as the gold standard of healthy, authentic, and ethically sourced fox nuts. We are transforming the local trade into a tech-driven marketplace.
+            </p>
+            <ul class="list-unstyled mb-4">
+              <li class="py-2 border-bottom border-light d-flex align-items-start gap-2 text-dark"><i class="bi bi-stars text-warning mt-1"></i> Build a world-class digital marketplace for local producers</li>
+              <li class="py-2 border-bottom border-light d-flex align-items-start gap-2 text-dark"><i class="bi bi-stars text-warning mt-1"></i> Expand to international wellness and specialty markets</li>
+              <li class="py-2 border-bottom border-light d-flex align-items-start gap-2 text-dark"><i class="bi bi-stars text-warning mt-1"></i> Uplift agricultural families via seller-direct onboarding</li>
+              <li class="py-2 d-flex align-items-start gap-2 text-dark"><i class="bi bi-stars text-warning mt-1"></i> Educate consumers globally about the rich nutrients of fox nuts</li>
+            </ul>
+          </div>
+          <div class="p-3 rounded" style="background-color:rgba(201, 150, 42, 0.05); border-left: 3px solid var(--about-gold);">
+            <p class="mb-0 text-muted fst-italic fs-6">
+              <i class="bi bi-quote me-1 text-warning fs-5"></i>Where tradition meets technology — building a future Mithila is proud of.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ POND-TO-PLATE PROCESS TIMELINE ══════════ -->
+<section class="process-section py-5">
+  <div class="container py-3">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title text-dark">Our <span class="text-gradient">Pond-to-Plate Process</span></h2>
+      <p class="section-subtitle text-muted">How our organic makhana is processed traditionally</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="process-card-custom">
+          <div class="process-number">01</div>
+          <h4 class="process-step-title">Wetland Harvesting</h4>
+          <p class="text-muted small mb-0">Harvested from deep clayey beds of freshwater ponds in Mithila, our farmers manually gather makhana seeds in muddy waters using traditional bamboo sieves.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="process-card-custom">
+          <div class="process-number">02</div>
+          <h4 class="process-step-title">Sun Drying & Grading</h4>
+          <p class="text-muted small mb-0">The collected black seeds are thoroughly cleaned, washed, and spread out under pure sunlight to dry. They are then graded by size for uniform heat absorption.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="process-card-custom">
+          <div class="process-number">03</div>
+          <h4 class="process-step-title">Roasting & Popping</h4>
+          <p class="text-muted small mb-0">Seeds are roasted in iron pans at precise temperatures. Harvesters then manually crack them with wooden mallets to instantly pop them into white gold flakes.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="process-card-custom">
+          <div class="process-number">04</div>
+          <h4 class="process-step-title">Polishing & Packing</h4>
+          <p class="text-muted small mb-0">The popped kernels are polished to remove remaining shells, inspected for crunchiness, sorted, and sealed immediately in airtight bags to preserve fresh quality.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ THE VISIONARY'S LETTER & PROFILE ══════════ -->
+<section class="visionary-section py-5" id="founder">
+  <div class="container py-3">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title text-dark">Meet the <span class="text-gradient">Visionary</span></h2>
+      <p class="section-subtitle text-muted">The face behind Mithila White Gold</p>
+    </div>
+
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-4 text-center">
+        <div class="visionary-img-container">
+          <img src="{% static 'img/founder.png' %}" alt="Satyam Kumar Jha" class="visionary-img"
+               onerror="this.onerror=null;this.src='{% static 'img/product_placeholder.svg' %}'">
+        </div>
+        <h3 class="visionary-title mb-1 text-dark">Satyam Kumar Jha</h3>
+        <div class="visionary-subtitle mb-4">Founder & Lead Developer</div>
+
+        <!-- Stately Mini stats -->
+        <div class="row g-2 max-w-300 mx-auto">
+          <div class="col-4">
+            <div class="visionary-stat-box">
+              <div class="visionary-stat-icon">🎓</div>
+              <div class="visionary-stat-val">MCA</div>
+              <div class="visionary-stat-lbl">Degree</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="visionary-stat-box">
+              <div class="visionary-stat-icon">🏡</div>
+              <div class="visionary-stat-val">Mithila</div>
+              <div class="visionary-stat-lbl">Home</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="visionary-stat-box">
+              <div class="visionary-stat-icon">💻</div>
+              <div class="visionary-stat-val">Django</div>
+              <div class="visionary-stat-lbl">Stack</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="visionary-letter-wrapper">
+          <span style="font-size:2.5rem; color:var(--about-gold); font-family:Georgia, serif; line-height:0; display:block; margin-bottom:10px;">“</span>
+          <h4 class="mb-4 text-dark fw-bold" style="font-family:'Cinzel',serif;">Connecting Mithila's Bounty to the World</h4>
+          <p class="text-muted lh-lg mb-3">
+            Growing up in the serene wetlands of Mithila, I always witnessed the hard work that goes into harvesting every single grain of makhana. Despite it being a nutrient-dense superfood, the local farmers rarely received the recognition or compensation they deserved. 
+          </p>
+          <p class="text-muted lh-lg mb-4">
+            Combining my background in computer applications (MCA) with my love for my homeland, I founded <strong>Mithila White Gold</strong>. I wanted to build a modern, transparent e-commerce gateway that cuts out middlemen, showcases the geographical significance of our GI-tagged produce, and brings healthy snacks directly to your household. Thank you for supporting our local growers.
+          </p>
+          <div class="d-flex flex-wrap gap-3 mt-4">
+            <a href="https://www.linkedin.com/in/satyam-kumar-jha-77774139b/" target="_blank" class="btn btn-primary d-flex align-items-center gap-2" style="background-color:#0077b5; border-color:#0077b5; border-radius:50px;">
+              <i class="bi bi-linkedin"></i> LinkedIn
+            </a>
+            <a href="tel:6202822415" class="btn btn-outline-dark d-flex align-items-center gap-2" style="border-radius:50px;">
+              <i class="bi bi-telephone-outbound"></i> Call: 6202822415
+            </a>
+            <a href="{% url 'store:contact' %}" class="btn btn-farm-primary d-flex align-items-center gap-2" style="border-radius:50px;">
+              <i class="bi bi-envelope"></i> Send Message
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CORE PILLARS (DEEP EMERALD BACKGROUND) ══════════ -->
+<section class="pillars-section py-5">
+  <div class="container py-4">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title text-white">Our <span style="color:var(--about-gold-bright);">Core Pillars</span></h2>
+      <p class="section-subtitle text-white-50">The principles guiding every pack we seal</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="pillar-card-custom text-center">
+          <div class="pillar-icon-custom">🌿</div>
+          <h4 class="pillar-title-custom">100% Purity</h4>
+          <p class="pillar-desc-custom">
+            We supply makhana exactly the way nature intended. Absolutely no chemical bleaching, artificial colors, or additives are used in our sorting or popping process.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pillar-card-custom text-center">
+          <div class="pillar-icon-custom">🤝</div>
+          <h4 class="pillar-title-custom">Farmers First</h4>
+          <p class="pillar-desc-custom">
+            By purchasing from us, you directly support fair-wage contracts and sustainable working conditions for the local pond harvesters of Mithila.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pillar-card-custom text-center">
+          <div class="pillar-icon-custom">🪷</div>
+          <h4 class="pillar-title-custom">Heritage GI-Tag</h4>
+          <p class="pillar-desc-custom">
+            Every flake of makhana we pack holds the Geographical Indication certification, verifying its origin in the unique wetland soil and climate of Mithila.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TIMELINE OF MILESTONES ══════════ -->
+<section class="py-5" style="background:#fafdfb;">
+  <div class="container py-3">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title text-dark">Our <span class="text-gradient">Milestones</span></h2>
+      <p class="section-subtitle text-muted">Tracing our progress from inception to growth</p>
+    </div>
+
+    <div class="timeline-custom">
+      <div class="timeline-item-custom">
+        <div class="timeline-dot-custom">🌱</div>
+        <div class="timeline-content-custom">
+          <div class="timeline-year-custom">Phase 1</div>
+          <h5 class="timeline-title-custom">The Spark</h5>
+          <p class="timeline-desc-custom">Satyam Kumar Jha notices the struggle of local harvesters in Bihar's villages and decides to build a direct e-commerce solution to link them to the nationwide market.</p>
+        </div>
+      </div>
+      <div class="timeline-item-custom">
+        <div class="timeline-dot-custom">🛠️</div>
+        <div class="timeline-content-custom">
+          <div class="timeline-year-custom">Phase 2</div>
+          <h5 class="timeline-title-custom">Architecting the Platform</h5>
+          <p class="timeline-desc-custom">Satyam leverages his MCA engineering skills to code a custom Django-based portal tailored specifically for farmer onboarding and customer checkouts.</p>
+        </div>
+      </div>
+      <div class="timeline-item-custom">
+        <div class="timeline-dot-custom">🚀</div>
+        <div class="timeline-content-custom">
+          <div class="timeline-year-custom">Phase 3</div>
+          <h5 class="timeline-title-custom">Mithila White Gold Launch</h5>
+          <p class="timeline-desc-custom">The digital marketplace goes live. Pure GI-tagged makhana is made accessible pan-India with transparent order tracking and digital payment methods.</p>
+        </div>
+      </div>
+      <div class="timeline-item-custom">
+        <div class="timeline-dot-custom">🌍</div>
+        <div class="timeline-content-custom">
+          <div class="timeline-year-custom">Phase 4</div>
+          <h5 class="timeline-title-custom">Expansion & Sustainability</h5>
+          <p class="timeline-desc-custom">Onboarding cooperative farming networks across Darbhanga, Madhubani, and Samastipur to build a sustainable global supply chain of Mithila's finest superfood.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CTA ══════════ -->
+<section class="about-cta-section py-5 text-white">
+  <div class="container text-center py-3">
+    <h2 class="text-white fw-bold mb-3" style="font-family:'Cinzel',serif;">Savour the Purity of Mithila</h2>
+    <p class="mb-4 opacity-75" style="color:var(--about-gold-bright); font-size:1.1rem; font-style:italic;">Direct from local farms to your home</p>
+    <div class="d-flex justify-content-center flex-wrap gap-3">
+      <a href="{% url 'store:product_list' %}" class="btn btn-warning btn-lg fw-bold px-5">
+        🛒 Shop Makhana
+      </a>
+      <a href="{% url 'store:contact' %}" class="btn btn-outline-light btn-lg px-5">
+        📞 Contact Us
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
