@@ -297,6 +297,9 @@ def _build_receipt_story(doc, settings, receipt, customer_name, customer_phone,
     # Pre-compute font tag to avoid backslash-in-f-string (Python 3.11 compat)
     rupee_tag = '<font name="' + UNICODE_FONT + '">₹</font>'
     grand_total_font = UNICODE_FONT if UNICODE_FONT != 'Helvetica' else 'Times-Bold'
+    # cell_style_right may not be defined if items_data was empty — define fallback
+    if 'cell_style_right' not in dir():
+        cell_style_right = ParagraphStyle('TableCellRight2', parent=styles['Normal'], alignment=TA_RIGHT, fontSize=10)
     summary_data = [
         ['', 'Subtotal', Paragraph(('\u20b9' + '{:,.2f}'.format(subtotal)).replace('\u20b9', rupee_tag), cell_style_right)],
         ['', 'GST (5%)', Paragraph(('\u20b9' + '{:,.2f}'.format(gst_amount)).replace('\u20b9', rupee_tag), cell_style_right)],
@@ -340,8 +343,6 @@ def _build_receipt_story(doc, settings, receipt, customer_name, customer_phone,
 
 # ── Chatbot Logic & Reporting ──────────────────────────
 
-from google import genai
-from google.genai import types
 from decouple import config
 
 def get_bot_response(user_message):
@@ -349,6 +350,14 @@ def get_bot_response(user_message):
     AI-based logic to return chatbot responses using Google Gemini API.
     Powered by 'Mithila Gold AI' - the exclusive assistant for Mithila White Gold.
     """
+    # Lazy import: only load when chatbot is actually used,
+    # so a missing/broken google-genai package doesn't crash startup.
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        return "I am currently undergoing maintenance (AI package unavailable). Please contact support directly."
+
     api_key = config('GEMINI_API_KEY', default='')
 
     if not api_key:
