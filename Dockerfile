@@ -7,8 +7,7 @@ FROM --platform=linux/amd64 python:3.11-slim
 
 # ── Environment ───────────────────────────────────────────────────────────────
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=7860
+    PYTHONUNBUFFERED=1
 
 # ── System dependencies ───────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,10 +30,9 @@ RUN useradd -m -u 1000 hfuser && chown -R hfuser:hfuser /app
 USER 1000
 
 # ── Port ──────────────────────────────────────────────────────────────────────
-# Hugging Face Spaces strictly requires port 7860
-EXPOSE 7860
+# Railway injects $PORT at runtime; expose 8080 as default fallback
+EXPOSE 8080
 
 # ── Start command ─────────────────────────────────────────────────────────────
-# No entrypoint.sh used — avoids CRLF/permission issues entirely.
-# Runs: collectstatic → migrate → gunicorn (all in one shell command)
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:7860 --workers 2 --timeout 120 poultry_farm.wsgi:application"]
+# railway.json startCommand overrides this; kept as fallback.
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate --noinput; gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120 --log-level info poultry_farm.wsgi:application"]

@@ -1,1 +1,1 @@
-web: python manage.py collectstatic --noinput; python manage.py migrate --noinput || echo "Migration skipped - DB not ready"; gunicorn poultry_farm.wsgi --worker-class gevent --workers 1 --timeout 120 --bind 0.0.0.0:$PORT
+web: python manage.py collectstatic --noinput && python manage.py migrate --noinput; gunicorn poultry_farm.wsgi --workers 2 --timeout 120 --bind 0.0.0.0:${PORT:-8080}
